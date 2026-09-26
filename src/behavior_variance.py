@@ -16,7 +16,8 @@ if __name__ == "__main__":
         help="model name e.g. meta-llama/Llama-3.2-1B-Instruct")
     parser.add_argument("--d_name", type=str, required=True,)
     parser.add_argument("--save_root", type=str, 
-        default="../output",)
+        # default="../output",)
+        default="output",)
     parser.add_argument("--project_root", type=str, 
         # default="../",
         default="",
@@ -24,7 +25,8 @@ if __name__ == "__main__":
     parser.add_argument("--prompt_type", type=str, required=True, help="prompt type: EP or IP")
     parser.add_argument("--batch_size", type=int, default=20, help="batch size")
     parser.add_argument("--remote", type=bool, default=False, help="whether to use NDIF to run model remotely")
-    parser.add_argument("--dataset_folder", type=str, default="../datasets/abstractive", help="folder of the dataset")
+    # parser.add_argument("--dataset_folder", type=str, default="../datasets/abstractive", help="folder of the dataset")
+    parser.add_argument("--dataset_folder", type=str, default="datasets/abstractive", help="folder of the dataset")
 
     args = parser.parse_args()
     model_name = args.model_name
