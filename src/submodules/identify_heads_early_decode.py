@@ -3,7 +3,7 @@ import pickle
 import json
 import numpy as np
 from typing import List
-from transformer_lens import HookedTransformer
+# from transformer_lens import HookedTransformer
 from nnsight import LanguageModel
 from shared_utils.shared_utils import *
 from shared_utils.prompt_utils import *
