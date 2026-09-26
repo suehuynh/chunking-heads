@@ -3,9 +3,9 @@ import torch
 from tqdm.auto import tqdm
 import os
 import json
-from transformer_lens import HookedTransformer
+# from transformer_lens import HookedTransformer
 from nnsight import LanguageModel
-from transformers import AutoTokenizer
+# from transformers import AutoTokenizer
 
 # from Fix_incorrect_prompts.Fix_incorrect_prompts_utils import *
 
