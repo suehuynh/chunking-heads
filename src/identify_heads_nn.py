@@ -22,14 +22,17 @@ if __name__ == "__main__":
     parser.add_argument("--monitor_other_task", type=bool, default=False, 
         help="whether to monitor other task's lexical task heads while running the prompts for a giventarget task")
     parser.add_argument("--save_root", type=str, 
-        default="../output",)
+        # default="../output",)
+        default="output",)
     parser.add_argument("--project_root", type=str, 
-        default="../",
+        # default="../",
+        default="",
         help="directory of the codebase ")
     parser.add_argument("--batch_size", type=int, default=20, help="batch size")
     parser.add_argument("--k", type=int, default=10, help="top k decoded tokens to look for match")
     parser.add_argument("--exp_size", type=int, default=100, help="number of examples to sample from the dataset")
-    parser.add_argument("--dataset_folder", type=str, default="../datasets/abstractive", help="folder of the dataset")
+    # parser.add_argument("--dataset_folder", type=str, default="../datasets/abstractive", help="folder of the dataset")
+    parser.add_argument("--dataset_folder", type=str, default="datasets/abstractive", help="folder of the dataset")
     parser.add_argument("--remote", type=bool, default=False, help="whether to use NDIF to run model remotely")
     parser.add_argument("--task_relation_dict_type", type=str, default="human",
         help="type of the task relation dict: human, llms, combined")
@@ -88,7 +91,8 @@ if __name__ == "__main__":
 
     if monitor_other_task:
         task_list = task_relation_dict.keys()
-    elif dataset_folder == "../datasets/compositional":
+    # elif dataset_folder == "../datasets/compositional":
+    elif dataset_folder == "datasets/compositional":
         # load composition task list 
         with open(os.path.join(project_root, "datasets", 
          "dataset_info", f"compositional_task_dict.json"), "r") as f:
