@@ -140,7 +140,7 @@ if __name__ == "__main__":
             best_index = np.argmax(acc_list).item()
             prompt_template_index = best_index
     elif prompt_type == "EP":
-        prompt_template_index = 20
+        prompt_template_index = 30
     else:
         raise ValueError(f"prompt_type {prompt_type} not supported")
 
