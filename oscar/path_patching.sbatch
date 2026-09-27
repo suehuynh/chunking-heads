@@ -25,7 +25,7 @@ python src/shared_utils/path_patching.py \
     --d_name "country-capital" \
     --prompt_type "EP" \
     --component_type "lexical_task" \
-    --save_root "output_1" \
+    --save_root "output" \
     --project_root "$REPO_ROOT" \
     --dataset_folder "$REPO_ROOT/datasets/abstractive" \
     --k 10 \
