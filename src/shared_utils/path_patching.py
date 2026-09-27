@@ -704,6 +704,7 @@ if __name__ == "__main__":
     help="p: minimum fraction of prompts a head must match to count as a lexical task head")
 
     args = parser.parse_args()
+
     if args.monitor_other_task:
         task_list = args.task_relation_dict.keys()
     # elif dataset_folder == "../datasets/compositional":
