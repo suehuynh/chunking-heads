@@ -103,7 +103,6 @@ if __name__ == "__main__":
         result_dict[d_name][prompt_temp_index_idx]['correct_index'] = correct_index
         result_dict[d_name][prompt_temp_index_idx]['n_correct_index'] = len(correct_index)
         result_dict[d_name][prompt_temp_index_idx]['n_dataset'] = len(prompts)
-    
     # Save after each dataset is done 
     if not os.path.exists(save_path):
         os.makedirs(save_path)
