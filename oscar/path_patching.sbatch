@@ -14,7 +14,6 @@ mkdir -p logs
 REPO_ROOT="$SLURM_SUBMIT_DIR"
 
 module load python/3.11.11-5e66
-source "$REPO_ROOT/.venv/bin/activate"
 
 
 MODEL="meta-llama/Llama-3.2-1B-Instruct"
