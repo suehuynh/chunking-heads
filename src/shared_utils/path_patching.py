@@ -687,7 +687,7 @@ if __name__ == "__main__":
         help="whether to monitor other task's lexical task heads while running the prompts for a giventarget task")
     parser.add_argument("--save_root", type=str, 
         # default="../output",)
-        default="output_1",)
+        default="output",)
     parser.add_argument("--project_root", type=str, 
         # default="../",
         default="",
