@@ -674,8 +674,8 @@ def path_patch_sender_to_receiver_batch(
         all_results += batch_results_tensor.cpu() * (current_batch_size / n_samples)
 
     return all_results
+
 if __name__ == "__main__":
-    
     parser = argparse.ArgumentParser()
     parser.add_argument("--model_name", type=str, required=True, 
             help="model name e.g. meta-llama/Llama-3.2-1B-Instruct")
@@ -786,3 +786,4 @@ if __name__ == "__main__":
                 json.dump(
                     results, f
                 )
+        print(f"Saved logit diff for {receiver} to {save_path}")
