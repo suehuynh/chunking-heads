@@ -735,7 +735,7 @@ if __name__ == "__main__":
         args.save_root, model_name, args.d_name, "Heads", "MAPS_nnsight",
         f"shared_{args.d_name}_heads_p{args.threshold}_k{args.k}.json",
     )
-    with open(save_path, "w") as f:
+    with open(save_path, "r") as f:
         receiver_list = json.load(f)
 
     # Load prompts
@@ -745,9 +745,10 @@ if __name__ == "__main__":
             args.save_root, model_name, "across_tasks", "Behavior",
             file_name,
         )
-        with open(file_path, "w") as f:
+        with open(file_path, "r") as f:
             correct_dataset = json.load(f)
-        prompt_temp_idx_list = [1,2,3,4,5,10,20,30]
+        # prompt_temp_idx_list = [1,2,3,4,5,10,20,30]
+        prompt_temp_idx_list = [5]
     elif args.prompt_type == "IP":
         file_name = "IP_vary_n_inst_behavior.json"
         prompt_temp_idx_list = [0,1,2,3,4]
@@ -762,28 +763,35 @@ if __name__ == "__main__":
                     dataset, n_shot = prompt_temp_index_idx, delimiter = ";", q_bos=" ", a_bos=" ", qa_delimiter=":"
                 )
                 correct_indices = correct_dataset[args.d_name][str(prompt_temp_index_idx)]["correct_index"]
-                correct_prompts, correct_answers = clean_prompts[correct_indices], clean_answers[correct_indices]
+                correct_prompts = [clean_prompts[i] for i in correct_indices]
+                correct_answers = [clean_answers[i] for i in correct_indices]
             # elif args.prompt_type == "IP":
             #     prompts, answers = create_instruction_prompts(dataset, 
             #     instruction_dict[d_name][str(prompt_temp_index_idx)])
     corrupt_prompts = create_zs_prompts(dataset)
+
+    # List of senders
+    spec = get_model_specs(model)
+    n_heads = spec["n_heads"]
+    min_layer, min_head_or_mlp = find_earliest_receiver(receiver_list)
+    if min_head_or_mlp >= 0:
+        max_sender_layer = min_layer - 1
+        result_shape = (min_layer, n_heads + 1)
+    else:
+        max_sender_layer = min_layer
+        result_shape = (min_layer + 1, n_heads + 1)
     # Path patching sender to one LTH at a time
     for receiver in receiver_list:
         results = path_patch_sender_to_receiver_batch(
-            model=model,
-            clean_prompts=clean_prompts,
-            corrupt_prompts=corrupt_prompts,
-            answers=clean_answers,
-            receiver=receiver,
-            batch_size=8,
-            remote=True,
-            sender_pos=[-1],
-            receiver_pos=[-1],
-            freeze_pos=[-1])
-        save_path =  os.path.join(args.save_root, args.model_name, args.d_name,
-                                "path_patching", f"{args.prompt_type}_{receiver}_batch_results_tensor.json")
-        with open(save_path, "w") as f:
-                json.dump(
-                    results, f
-                )
+            model=model, clean_prompts=clean_prompts, corrupt_prompts=corrupt_prompts,
+            answers=clean_answers, receiver=receiver,
+            min_layer=min_layer, min_head_or_mlp=min_head_or_mlp,
+            max_sender_layer=max_sender_layer, result_shape=result_shape,
+            batch_size=8, remote=args.remote, sender_pos=[-1], receiver_pos=[-1], freeze_pos=[-1])
+
+        
+        save_dir = os.path.join(args.save_root, model_name, args.d_name, "path_patching")
+        os.makedirs(save_dir, exist_ok=True)
+        save_path = os.path.join(save_dir, f"{args.prompt_type}_L{receiver[0]}C{receiver[1]}_batch_results_tensor.pt")
+        torch.save(results, save_path) 
         print(f"Saved logit diff for {receiver} to {save_path}")
