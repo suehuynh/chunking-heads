@@ -10,7 +10,7 @@ from torch import Tensor
 from tqdm.auto import tqdm
 
 from wrapper import ModelAccessor, get_accessor_config, get_model_specs
-from shared_utils.prompt_utils import create_few_shot_prompts, create_zs_prompts
+from prompt_utils import create_few_shot_prompts, create_zs_prompts
 
 def find_earliest_receiver(receiver_list: list[tuple[int, int]]) -> tuple[int, int]:
     """
