@@ -84,7 +84,18 @@ def path_patch_sender_to_receivers(
         mediated through the receiver set for this batch.
     """
     #  Setup
-    all_pos = list(range(len(clean_tokens[1])))
+    # Every patched run (Run 1 and Run 2) executes on corrupt_tokens, so positions
+    # must index the CORRUPT sequence. Clean and corrupt can differ in length
+    # (e.g. 5-shot clean vs zero-shot corrupt), so only negative indices like [-1]
+    # are well-defined on both; "all_pos" is only valid when the lengths match.
+    all_pos = list(range(corrupt_tokens.shape[1]))
+    uses_all_pos = "all_pos" in (sender_pos, receiver_pos, freeze_pos)
+    if uses_all_pos and clean_tokens.shape[1] != corrupt_tokens.shape[1]:
+        raise ValueError(
+            f"'all_pos' needs clean and corrupt prompts of equal length, got "
+            f"{clean_tokens.shape[1]} vs {corrupt_tokens.shape[1]} tokens. "
+            "Use explicit negative positions like [-1] instead."
+        )
     if sender_pos == "all_pos": 
         sender_pos = all_pos
     if receiver_pos == "all_pos": 
@@ -454,7 +465,18 @@ def path_patch_sender_to_receiver(
     WHOLE identified LTH list (computed once, outside, shared across every
     receiver) -- that's what makes per-receiver results comparable.
     """
-    all_pos = list(range(len(clean_tokens[1])))
+    # Every patched run (Run 1 and Run 2) executes on corrupt_tokens, so positions
+    # must index the CORRUPT sequence. Clean and corrupt can differ in length
+    # (e.g. 5-shot clean vs zero-shot corrupt), so only negative indices like [-1]
+    # are well-defined on both; "all_pos" is only valid when the lengths match.
+    all_pos = list(range(corrupt_tokens.shape[1]))
+    uses_all_pos = "all_pos" in (sender_pos, receiver_pos, freeze_pos)
+    if uses_all_pos and clean_tokens.shape[1] != corrupt_tokens.shape[1]:
+        raise ValueError(
+            f"'all_pos' needs clean and corrupt prompts of equal length, got "
+            f"{clean_tokens.shape[1]} vs {corrupt_tokens.shape[1]} tokens. "
+            "Use explicit negative positions like [-1] instead."
+        )
     if sender_pos == "all_pos":
         sender_pos = all_pos
     if receiver_pos == "all_pos":
