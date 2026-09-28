@@ -18,6 +18,17 @@ def _unwrap(saved):
     older versions returned a proxy with `.value`. Accept either."""
     return saved.value if hasattr(saved, "value") else saved
 
+
+def _model_device(model) -> torch.device:
+    """Device of the model's weights. Tokenizers always return CPU tensors, and
+    nnsight does not move raw token tensors for you, so inputs must be moved here."""
+    try:
+        device = next(model.parameters()).device
+    except (StopIteration, AttributeError, TypeError):
+        return torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    # remote (NDIF) runs keep undispatched meta weights locally; inputs stay on CPU
+    return torch.device("cpu") if device.type == "meta" else device
+
 def find_earliest_receiver(receiver_list: list[tuple[int, int]]) -> tuple[int, int]:
     """
     Finds the computationally earliest component in a list of receivers.
@@ -400,6 +411,11 @@ def path_patch_sender_to_receivers_batch(
     answer_tokens = model.tokenizer(answers, padding_side="right", add_special_tokens=False, **tokenizer_kwargs)[
         "input_ids"][:, 0]
 
+    device = _model_device(model)
+    clean_tokens = clean_tokens.to(device)
+    corrupt_tokens = corrupt_tokens.to(device)
+    answer_tokens = answer_tokens.to(device)
+
     #  Determine Sender Range & Result Shape
     min_layer, min_head_or_mlp = find_earliest_receiver(receiver_list)
     if min_head_or_mlp >= 0:  # Earliest receiver is an Attention Head
@@ -679,6 +695,11 @@ def path_patch_sender_to_receiver_batch(
     clean_tokens = model.tokenizer(clean_prompts, padding_side="left", **tokenizer_kwargs)["input_ids"]
     corrupt_tokens = model.tokenizer(corrupt_prompts, padding_side="left", **tokenizer_kwargs)["input_ids"]
     answer_tokens = model.tokenizer(answers, padding_side="right", add_special_tokens=False, **tokenizer_kwargs)["input_ids"][:, 0]
+
+    device = _model_device(model)
+    clean_tokens = clean_tokens.to(device)
+    corrupt_tokens = corrupt_tokens.to(device)
+    answer_tokens = answer_tokens.to(device)
 
     all_results = torch.zeros(result_shape, device="cpu")
     for i in tqdm(range(0, n_samples, batch_size), desc=f"Batches -> receiver {receiver}"):
