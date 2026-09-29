@@ -814,15 +814,17 @@ if __name__ == "__main__":
     # List of senders
     spec = get_model_specs(model)
     n_heads = spec["n_heads"]
-    min_layer, min_head_or_mlp = find_earliest_receiver(receiver_list)
-    if min_head_or_mlp >= 0:
-        max_sender_layer = min_layer - 1
-        result_shape = (min_layer, n_heads + 1)
-    else:
-        max_sender_layer = min_layer
-        result_shape = (min_layer + 1, n_heads + 1)
     # Path patching sender to one LTH at a time
     for receiver in receiver_list:
+        # Senders that are all heads above the target receivers
+        min_layer, min_head_or_mlp = find_earliest_receiver([receiver])
+        if min_head_or_mlp >= 0:
+            max_sender_layer = min_layer - 1
+            result_shape = (min_layer, n_heads + 1)
+        else:
+            max_sender_layer = min_layer
+            result_shape = (min_layer + 1, n_heads + 1)
+        
         results = path_patch_sender_to_receiver_batch(
             model=model, clean_prompts=clean_prompts, corrupt_prompts=corrupt_prompts,
             answers=clean_answers, receiver=receiver,
@@ -831,8 +833,9 @@ if __name__ == "__main__":
             batch_size=8, remote=args.remote, sender_pos=[-1], receiver_pos=[-1], freeze_pos=[-1])
 
         
-        save_dir = os.path.join(args.save_root, model_name, args.d_name, "path_patching")
+        # save_dir = os.path.join(args.save_root, model_name, args.d_name, "path_patching")
+        save_dir = os.path.join(args.save_root, model_name, args.d_name, "path_patching_per_receiver")
         os.makedirs(save_dir, exist_ok=True)
-        save_path = os.path.join(save_dir, f"{args.prompt_type}_L{receiver[0]}C{receiver[1]}_batch_results_tensor.pt")
+        save_path = os.path.join(save_dir, f"{args.prompt_type}_L{receiver[0]}H{receiver[1]}_batch_results_tensor.pt")
         torch.save(results, save_path) 
         print(f"Saved logit diff for {receiver} to {save_path}")
