@@ -10,7 +10,7 @@ from torch import Tensor
 from tqdm.auto import tqdm
 
 from wrapper import ModelAccessor, get_accessor_config, get_model_specs
-from prompt_utils import create_few_shot_prompts, create_zs_prompts
+from prompt_utils import create_few_shot_prompts, create_zs_prompts, create_corrupt_prompts_input_shuffle, create_corrupt_prompts_output_shuffle
 
 
 def _unwrap(saved):
@@ -734,6 +734,9 @@ if __name__ == "__main__":
         help="directory of the codebase ")
     parser.add_argument("--batch_size", type=int, default=20, help="batch size")
     parser.add_argument("--k", type=int, default=10, help="top k decoded tokens to look for match")
+    parser.add_argument("--corruption_type", type=str, default="zs", 
+                        choices=["zs", "shuffle input", "shuffle output"],
+                        help="create corrupted_prompts based on corruption_type")
     parser.add_argument("--exp_size", type=int, default=100, help="number of examples to sample from the dataset")
     # parser.add_argument("--dataset_folder", type=str, default="../datasets/abstractive", help="folder of the dataset")
     parser.add_argument("--dataset_folder", type=str, default="datasets/abstractive", help="folder of the dataset")
@@ -809,7 +812,15 @@ if __name__ == "__main__":
             # elif args.prompt_type == "IP":
             #     prompts, answers = create_instruction_prompts(dataset, 
             #     instruction_dict[d_name][str(prompt_temp_index_idx)])
-    corrupt_prompts = create_zs_prompts(dataset)
+        if args.corruption_type == "zs":
+            corrupt_prompts = create_zs_prompts(dataset)
+        elif args.corruption_type == "shuffle input":
+            corrupt_prompts = create_corrupt_prompts_input_shuffle(dataset, n_shot=prompt_temp_index_idx)
+        elif args.corruption_type == "shuffle input":
+            corrupt_prompts = create_corrupt_prompts_output_shuffle(dataset, n_shot=prompt_temp_index_idx)
+    
+    # Zero-shot path patching only
+    # corrupt_prompts = create_zs_prompts(dataset)
 
     # List of senders
     spec = get_model_specs(model)
@@ -834,7 +845,7 @@ if __name__ == "__main__":
 
         
         # save_dir = os.path.join(args.save_root, model_name, args.d_name, "path_patching")
-        save_dir = os.path.join(args.save_root, model_name, args.d_name, "path_patching_per_receiver")
+        save_dir = os.path.join(args.save_root, model_name, args.d_name, "path_patching_per_receiver", args.corruption_type)
         os.makedirs(save_dir, exist_ok=True)
         save_path = os.path.join(save_dir, f"{args.prompt_type}_L{receiver[0]}H{receiver[1]}_batch_results_tensor.pt")
         torch.save(results, save_path) 
