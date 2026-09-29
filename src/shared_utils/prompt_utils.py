@@ -278,7 +278,8 @@ def generate_few_shot_prompts(d_name=None, model=None,
     INPUT_LENGTH=None, OUTPUT_LENGTH=None, corruption_type="zs",
     EXP_SIZE=100, filter_correct=True, n_shot=5,
     output_correct_index=False, correct_index_list=None,
-    batch_size=10, dataset_folder="../datasets/abstractive",
+    # batch_size=10, dataset_folder="../datasets/abstractive",
+    batch_size=10, dataset_folder="datasets/abstractive",
 ):
     
     with open(os.path.join(dataset_folder, f"{d_name}.json")) as f: 
@@ -527,7 +528,8 @@ def create_zs_prompts_from_index(raw_dataset, index_list):
 def generate_few_shot_prompts_from_index(d_name=None, 
     corruption_type="random_query",
     index_list=None,
-    dataset_folder:str="../datasets/abstractive",
+    # dataset_folder:str="../datasets/abstractive",
+    dataset_folder:str="datasets/abstractive",
 ): 
     with open(os.path.join(dataset_folder, f"{d_name}.json")) as f: 
         dataset = json.load(f)
