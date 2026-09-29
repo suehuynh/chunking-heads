@@ -2,14 +2,18 @@
 Plot path-patching results (LOGIT_DIFF) written by path_patching.py.
 
 path_patching.py saves one tensor per receiver to
-    <save_root>/<model>/<d_name>/path_patching/<prompt_type>_L{layer}C{comp}_batch_results_tensor.pt
-with shape [n_sender_layers, n_heads + 1]: rows are sender layers, columns
+    <save_root>/<model>/<d_name>/<subdir>/<prompt_type>_L{layer}H{head}_batch_results_tensor.pt
+(older runs used L{layer}C{comp}; both load). Current subdirs:
+    path_patching                                    Experiment 1: senders above the earliest LTH
+    path_patching_per_receiver/zs                    senders above each receiver, zero-shot corrupt
+    path_patching_per_receiver/<corruption>_seed<N>  e.g. shuffle_input_seed42
+Each tensor has shape [n_sender_layers, n_heads + 1]: rows are sender layers, columns
 0..n_heads-1 are attention heads and the last column is that layer's MLP.
 Values are the normalized recovery of the clean answer's logit.
 
 Usage:
     python src/shared_utils/plot_utils.py --model_name meta-llama/Llama-3.2-1B-Instruct \
-        --d_name country-capital --prompt_type EP
+        --d_name country-capital --prompt_type EP --subdir path_patching_per_receiver/shuffle_input_seed42
 """
 import argparse
 import math
@@ -23,26 +27,24 @@ from plotly.subplots import make_subplots
 
 Receiver = tuple[int, int]
 
-_FILENAME_RE = re.compile(r"^(?P<ptype>\w+?)_L(?P<layer>-?\d+)H(?P<comp>-?\d+)_batch_results_tensor\.pt$")
+_FILENAME_RE = re.compile(r"^(?P<ptype>\w+?)_L(?P<layer>-?\d+)[CH](?P<comp>-?\d+)_batch_results_tensor\.pt$")
 
 
-def path_patching_dir(save_root: str, model_name: str, d_name: str) -> Path:
-    """Directory path_patching.py writes to; accepts a full or short model name."""
-    # return Path(save_root) / model_name.split("/")[-1] / d_name / "path_patching"
-    return Path(save_root) / model_name.split("/")[-1] / d_name / "path_patching_per_receiver"
+def path_patching_dir(save_root: str, model_name: str, d_name: str, subdir: str) -> Path:
+    """Directory path_patching.py wrote to; accepts a full or short model name."""
+    return Path(save_root) / model_name.split("/")[-1] / d_name / subdir
 
 
 def load_path_patching_results(pp_dir: Path, prompt_type: str) -> dict[Receiver, torch.Tensor]:
     """{(receiver_layer, receiver_comp): [n_sender_layers, n_heads + 1] tensor}."""
     tensors = {}
-    # for f in sorted(pp_dir.glob(f"{prompt_type}_L*C*_batch_results_tensor.pt")):
-    for f in sorted(pp_dir.glob(f"{prompt_type}_L*H*_batch_results_tensor.pt")):
+    for f in sorted(pp_dir.glob(f"{prompt_type}_L*_batch_results_tensor.pt")):
         m = _FILENAME_RE.match(f.name)
         if m is None or m["ptype"] != prompt_type:
             continue
         tensors[(int(m["layer"]), int(m["comp"]))] = torch.load(f, map_location="cpu")
     if not tensors:
-        raise FileNotFoundError(f"no {prompt_type}_L*C*_batch_results_tensor.pt files in {pp_dir}")
+        raise FileNotFoundError(f"no {prompt_type}_L*_batch_results_tensor.pt files in {pp_dir}")
     return dict(sorted(tensors.items()))
 
 
@@ -112,17 +114,20 @@ def main() -> None:
     parser.add_argument("--prompt_type", type=str, default="EP", choices=["EP", "IP"])
     parser.add_argument("--save_root", type=str, default="output",
         help="root that path_patching.py wrote to (same as its --save_root)")
+    parser.add_argument("--subdir", type=str, required=True,
+        help="results folder under <save_root>/<model>/<d_name>/, e.g. path_patching, "
+             "path_patching_per_receiver/zs, path_patching_per_receiver/shuffle_input_seed42")
     parser.add_argument("--top_k", type=int, default=5, help="senders to print per receiver")
     parser.add_argument("--n_cols", type=int, default=2, help="heatmaps per row")
     args = parser.parse_args()
 
-    pp_dir = path_patching_dir(args.save_root, args.model_name, args.d_name)
+    pp_dir = path_patching_dir(args.save_root, args.model_name, args.d_name, args.subdir)
     tensors = load_path_patching_results(pp_dir, args.prompt_type)
     print(f"loaded {len(tensors)} receivers from {pp_dir}: {[receiver_label(r) for r in tensors]}")
 
     df = results_to_dataframe(tensors)
-    # csv_path = pp_dir / f"{args.prompt_type}_path_patching_all_receivers.csv"
-    csv_path = pp_dir / f"{args.prompt_type}_path_patching_per_receivers.csv"
+    # outputs live inside the experiment's own folder, so one neutral name is enough
+    csv_path = pp_dir / f"{args.prompt_type}_path_patching_summary.csv"
     df.to_csv(csv_path, index=False)
     print(f"saved {len(df)} rows to {csv_path}")
 
@@ -130,9 +135,8 @@ def main() -> None:
     print(top_senders(df, args.top_k).to_string(index=False))
 
     model_short = args.model_name.split("/")[-1]
-    title = f"Path patching: sender -> each receiver ({model_short}, {args.d_name}, {args.prompt_type})"
-    # html_path = pp_dir / f"{args.prompt_type}_path_patching_all_receivers.html"
-    html_path = pp_dir / f"{args.prompt_type}_path_patching_per_receivers.html"
+    title = f"Path patching: sender -> each receiver ({model_short}, {args.d_name}, {args.prompt_type}, {args.subdir})"
+    html_path = pp_dir / f"{args.prompt_type}_path_patching_summary.html"
     plot_receiver_grid(tensors, title, n_cols=args.n_cols).write_html(html_path)
     print(f"\nsaved heatmaps to {html_path}")
 

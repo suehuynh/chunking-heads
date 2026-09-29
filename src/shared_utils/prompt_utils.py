@@ -298,22 +298,22 @@ def generate_few_shot_prompts(d_name=None, model=None,
         dataset, n_shot = n_shot, delimiter = ";", q_bos=" ", a_bos=" ", qa_delimiter=":")
     if corruption_type in ["random_output", "relation"]:
         corrupt_few_shot_prompts = create_random_output_prompts(
-            dataset, n_shot = 5, delimiter = ";", q_bos=" ", a_bos=" ", qa_delimiter=":")
+            dataset, n_shot = n_shot, delimiter = ";", q_bos=" ", a_bos=" ", qa_delimiter=":")
     elif corruption_type =="shuffle_input":
         corrupt_few_shot_prompts, _, = create_corrupt_prompts_input_shuffle(
-            dataset, n_shot = 5, delimiter = ";", q_bos=" ", a_bos=" ", qa_delimiter=":")
+            dataset, n_shot = n_shot, delimiter = ";", q_bos=" ", a_bos=" ", qa_delimiter=":")
     # elif corruption_type =="abstract_causal":
     #     corrupt_few_shot_prompts, _ = create_corrupt_prompts_abstract_causal(
     #         task_dataset, n_shot = 5, delimiter = ";", q_bos=" ", a_bos=" ", qa_delimiter=":")
     elif corruption_type =="shuffle_output":
         corrupt_few_shot_prompts, _, _ = create_corrupt_prompts_output_shuffle(
-            dataset, n_shot = 5, delimiter = ";", q_bos=" ", a_bos=" ", qa_delimiter=":")
+            dataset, n_shot = n_shot, delimiter = ";", q_bos=" ", a_bos=" ", qa_delimiter=":")
     elif corruption_type =="target_output":
         corrupt_few_shot_prompts = create_target_output_prompts(
-            dataset, n_shot = 5, delimiter = ";", q_bos=" ", a_bos=" ", qa_delimiter=":")
+            dataset, n_shot = n_shot, delimiter = ";", q_bos=" ", a_bos=" ", qa_delimiter=":")
     elif corruption_type in ["random_query", "query"]:
         corrupt_few_shot_prompts = create_random_query_prompts(
-            dataset, n_shot = 5, delimiter = ";", q_bos=" ", a_bos=" ", qa_delimiter=":")
+            dataset, n_shot = n_shot, delimiter = ";", q_bos=" ", a_bos=" ", qa_delimiter=":")
     elif corruption_type == "minimal":
         corrupt_few_shot_prompts = create_minimal_corrupt_prompts(dataset)
     
