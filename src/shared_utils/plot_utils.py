@@ -23,18 +23,20 @@ from plotly.subplots import make_subplots
 
 Receiver = tuple[int, int]
 
-_FILENAME_RE = re.compile(r"^(?P<ptype>\w+?)_L(?P<layer>-?\d+)C(?P<comp>-?\d+)_batch_results_tensor\.pt$")
+_FILENAME_RE = re.compile(r"^(?P<ptype>\w+?)_L(?P<layer>-?\d+)H(?P<comp>-?\d+)_batch_results_tensor\.pt$")
 
 
 def path_patching_dir(save_root: str, model_name: str, d_name: str) -> Path:
     """Directory path_patching.py writes to; accepts a full or short model name."""
-    return Path(save_root) / model_name.split("/")[-1] / d_name / "path_patching"
+    # return Path(save_root) / model_name.split("/")[-1] / d_name / "path_patching"
+    return Path(save_root) / model_name.split("/")[-1] / d_name / "path_patching_per_receiver"
 
 
 def load_path_patching_results(pp_dir: Path, prompt_type: str) -> dict[Receiver, torch.Tensor]:
     """{(receiver_layer, receiver_comp): [n_sender_layers, n_heads + 1] tensor}."""
     tensors = {}
-    for f in sorted(pp_dir.glob(f"{prompt_type}_L*C*_batch_results_tensor.pt")):
+    # for f in sorted(pp_dir.glob(f"{prompt_type}_L*C*_batch_results_tensor.pt")):
+    for f in sorted(pp_dir.glob(f"{prompt_type}_L*H*_batch_results_tensor.pt")):
         m = _FILENAME_RE.match(f.name)
         if m is None or m["ptype"] != prompt_type:
             continue
@@ -98,7 +100,7 @@ def plot_receiver_grid(tensors: dict[Receiver, torch.Tensor], title: str, n_cols
             ),
             row=i // n_cols + 1, col=i % n_cols + 1,
         )
-    fig.update_layout(title=title, height=260 * n_rows, width=650 * n_cols)
+    fig.update_layout(title=title, height=500 * n_rows, width=650 * n_cols)
     return fig
 
 
@@ -119,7 +121,8 @@ def main() -> None:
     print(f"loaded {len(tensors)} receivers from {pp_dir}: {[receiver_label(r) for r in tensors]}")
 
     df = results_to_dataframe(tensors)
-    csv_path = pp_dir / f"{args.prompt_type}_path_patching_all_receivers.csv"
+    # csv_path = pp_dir / f"{args.prompt_type}_path_patching_all_receivers.csv"
+    csv_path = pp_dir / f"{args.prompt_type}_path_patching_per_receivers.csv"
     df.to_csv(csv_path, index=False)
     print(f"saved {len(df)} rows to {csv_path}")
 
@@ -128,7 +131,8 @@ def main() -> None:
 
     model_short = args.model_name.split("/")[-1]
     title = f"Path patching: sender -> each receiver ({model_short}, {args.d_name}, {args.prompt_type})"
-    html_path = pp_dir / f"{args.prompt_type}_path_patching_all_receivers.html"
+    # html_path = pp_dir / f"{args.prompt_type}_path_patching_all_receivers.html"
+    html_path = pp_dir / f"{args.prompt_type}_path_patching_per_receivers.html"
     plot_receiver_grid(tensors, title, n_cols=args.n_cols).write_html(html_path)
     print(f"\nsaved heatmaps to {html_path}")
 
