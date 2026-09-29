@@ -10,7 +10,7 @@ from torch import Tensor
 from tqdm.auto import tqdm
 
 from wrapper import ModelAccessor, get_accessor_config, get_model_specs
-from prompt_utils import create_few_shot_prompts, create_zs_prompts, create_corrupt_prompts_input_shuffle, create_corrupt_prompts_output_shuffle
+from prompt_utils import generate_few_shot_prompts, create_few_shot_prompts, create_zs_prompts, create_corrupt_prompts_input_shuffle, create_corrupt_prompts_output_shuffle
 
 
 def _unwrap(saved):
@@ -734,8 +734,8 @@ if __name__ == "__main__":
         help="directory of the codebase ")
     parser.add_argument("--batch_size", type=int, default=20, help="batch size")
     parser.add_argument("--k", type=int, default=10, help="top k decoded tokens to look for match")
-    parser.add_argument("--corruption_type", type=str, default="zs", 
-                        choices=["zs", "shuffle input", "shuffle output"],
+    parser.add_argument("--corruption_type", type=str, default="zs", required=True,
+                        choices=["zs", "shuffle_input", "shuffle_output"],
                         help="create corrupted_prompts based on corruption_type")
     parser.add_argument("--exp_size", type=int, default=100, help="number of examples to sample from the dataset")
     # parser.add_argument("--dataset_folder", type=str, default="../datasets/abstractive", help="folder of the dataset")
@@ -799,28 +799,20 @@ if __name__ == "__main__":
     else:
         raise ValueError(f"prompt_type {args.prompt_type} not supported")
     
-    for prompt_temp_index_idx in prompt_temp_idx_list:
+    for prompt_temp_idx in prompt_temp_idx_list:
         with open(os.path.join(args.dataset_folder, f"{args.d_name}.json")) as f: 
             dataset = json.load(f)
-            if args.prompt_type == "EP":
-                clean_prompts, clean_answers, _ = create_few_shot_prompts(
-                    dataset, n_shot = prompt_temp_index_idx, delimiter = ";", q_bos=" ", a_bos=" ", qa_delimiter=":"
-                )
-                correct_indices = correct_dataset[args.d_name][str(prompt_temp_index_idx)]["correct_index"]
-                correct_prompts = [clean_prompts[i] for i in correct_indices]
-                correct_answers = [clean_answers[i] for i in correct_indices]
-            # elif args.prompt_type == "IP":
-            #     prompts, answers = create_instruction_prompts(dataset, 
-            #     instruction_dict[d_name][str(prompt_temp_index_idx)])
-        if args.corruption_type == "zs":
-            corrupt_prompts = create_zs_prompts(dataset)
-        elif args.corruption_type == "shuffle input":
-            corrupt_prompts = create_corrupt_prompts_input_shuffle(dataset, n_shot=prompt_temp_index_idx, delimiter = ";", q_bos=" ", a_bos=" ", qa_delimiter=":")
-        elif args.corruption_type == "shuffle input":
-            corrupt_prompts = create_corrupt_prompts_output_shuffle(dataset, n_shot=prompt_temp_index_idx, delimiter = ";", q_bos=" ", a_bos=" ", qa_delimiter=":")
-    
+            clean_prompts, clean_answers, corrupt_prompts = generate_few_shot_prompts(d_name=args.d_name,
+                                      model=args.model_name,
+                                      corruption_type=args.corruption_type,
+                                      filter_correct=False,
+                                      n_shot=prompt_temp_idx,
+                                      batch_size=args.batch_size)
+
     # Zero-shot path patching only
     # corrupt_prompts = create_zs_prompts(dataset)
+
+    print(len(corrupt_prompts), len(clean_prompts), len(clean_answers))
 
     # List of senders
     spec = get_model_specs(model)
