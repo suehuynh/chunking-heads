@@ -30,4 +30,4 @@ python src/shared_utils/path_patching.py \
     --dataset_folder "$REPO_ROOT/datasets/abstractive" \
     --k 10 \
     --threshold 0.1 \
-    --corruption_type "input_shuffle"
+    --corruption_type "shuffle_input"
