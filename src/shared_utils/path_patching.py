@@ -480,12 +480,12 @@ def path_patch_sender_to_receiver(
     Core implementation: Sender -> ONE Receiver. min_layer/min_head_or_mlp/
     max_sender_layer/result_shape come from the EARLIEST receiver across the
     WHOLE identified LTH list (computed once, outside, shared across every
-    receiver) -- that's what makes per-receiver results comparable.
+    receiver).
     """
     # Every patched run (Run 1 and Run 2) executes on corrupt_tokens, so positions
     # must index the CORRUPT sequence. Clean and corrupt can differ in length
-    # (e.g. 5-shot clean vs zero-shot corrupt), so only negative indices like [-1]
-    # are well-defined on both; "all_pos" is only valid when the lengths match.
+    # (e.g. 5-shot clean vs zero-shot corrupt), "all_pos" is only valid 
+    # when the lengths match.
     all_pos = list(range(corrupt_tokens.shape[1]))
     uses_all_pos = "all_pos" in (sender_pos, receiver_pos, freeze_pos)
     if uses_all_pos and clean_tokens.shape[1] != corrupt_tokens.shape[1]:
@@ -507,7 +507,7 @@ def path_patch_sender_to_receiver(
     accessor = ModelAccessor(model, accessor_config)
     batch_size = len(clean_tokens)
 
-    # 1. Baseline logits & diff -- unchanged
+    # 1. Baseline logits & diff
     with torch.no_grad():
         clean_logits_trace = model.trace(clean_tokens, trace=False, remote=remote)
         corrupt_logits_trace = model.trace(corrupt_tokens, trace=False, remote=remote)
@@ -839,8 +839,8 @@ if __name__ == "__main__":
             answers=clean_answers, receiver=receiver,
             min_layer=min_layer, min_head_or_mlp=min_head_or_mlp,
             max_sender_layer=max_sender_layer, result_shape=result_shape,
-            batch_size=8, remote=args.remote, sender_pos=[-1], receiver_pos=[-1], freeze_pos=[-1])
-
+            # batch_size=8, remote=args.remote, sender_pos=[-1], receiver_pos=[-1], freeze_pos=[-1])
+            batch_size=8, remote=args.remote, sender_pos="all_pos", receiver_pos="all_pos", freeze_pos="all_pos")
         
         # save_dir = os.path.join(args.save_root, model_name, args.d_name, "path_patching")
         # shuffle corruptions are random: keep the seed in the folder so different draws never mix
