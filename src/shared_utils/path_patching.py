@@ -735,7 +735,7 @@ if __name__ == "__main__":
     parser.add_argument("--batch_size", type=int, default=20, help="batch size")
     parser.add_argument("--k", type=int, default=10, help="top k decoded tokens to look for match")
     parser.add_argument("--corruption_type", type=str, default="zs", required=True,
-                        choices=["zs", "shuffle_input", "shuffle_output"],
+                        choices=["zs", "input_shuffle", "output_shuffle"],
                         help="create corrupted_prompts based on corruption_type")
     parser.add_argument("--exp_size", type=int, default=100, help="number of examples to sample from the dataset")
     # parser.add_argument("--dataset_folder", type=str, default="../datasets/abstractive", help="folder of the dataset")
