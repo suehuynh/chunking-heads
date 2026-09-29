@@ -815,9 +815,9 @@ if __name__ == "__main__":
         if args.corruption_type == "zs":
             corrupt_prompts = create_zs_prompts(dataset)
         elif args.corruption_type == "shuffle input":
-            corrupt_prompts = create_corrupt_prompts_input_shuffle(dataset, n_shot=prompt_temp_index_idx)
+            corrupt_prompts = create_corrupt_prompts_input_shuffle(dataset, n_shot=prompt_temp_index_idx, delimiter = ";", q_bos=" ", a_bos=" ", qa_delimiter=":")
         elif args.corruption_type == "shuffle input":
-            corrupt_prompts = create_corrupt_prompts_output_shuffle(dataset, n_shot=prompt_temp_index_idx)
+            corrupt_prompts = create_corrupt_prompts_output_shuffle(dataset, n_shot=prompt_temp_index_idx, delimiter = ";", q_bos=" ", a_bos=" ", qa_delimiter=":")
     
     # Zero-shot path patching only
     # corrupt_prompts = create_zs_prompts(dataset)
