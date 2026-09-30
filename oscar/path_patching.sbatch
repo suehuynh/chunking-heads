@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH -J path_patch_country_capital
+#SBATCH -J path_patch_present_past
 #SBATCH --partition=gpu
 #SBATCH --gres=gpu:1
 #SBATCH --cpus-per-task=4
@@ -32,4 +32,4 @@ python src/shared_utils/path_patching.py \
     --threshold 0.1 \
     --corruption_type "shuffle_input" \
     --positions all \
-    --input_length 5
+    # --input_length 5
