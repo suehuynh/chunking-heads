@@ -22,7 +22,7 @@ MODEL="meta-llama/Llama-3.2-1B-Instruct"
 echo "=== running path-patching sweep (sender -> one receiver at a time) ==="
 python src/shared_utils/path_patching.py \
     --model_name "$MODEL" \
-    --d_name "country-capital" \
+    --d_name "park-country" \
     --prompt_type "EP" \
     --component_type "lexical_task" \
     --save_root "output" \
