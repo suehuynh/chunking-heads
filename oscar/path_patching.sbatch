@@ -31,4 +31,5 @@ python src/shared_utils/path_patching.py \
     --k 10 \
     --threshold 0.1 \
     --corruption_type "shuffle_output" \
-    --positions all
+    --positions all \
+    --input_length 5
