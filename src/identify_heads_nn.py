@@ -140,23 +140,25 @@ if __name__ == "__main__":
             best_index = np.argmax(acc_list).item()
             prompt_template_index = best_index
     elif prompt_type == "EP":
-        prompt_template_index = 5
+        # prompt_template_index = 5
+        prompt_template_idx_list = [5, 10, 20, 30]
     else:
         raise ValueError(f"prompt_type {prompt_type} not supported")
 
     # Run and save the results
-    result = get_save_MAPS_scores_across_tasks_nnsight(
-        model=model, model_name=model_name,
-        prompt_type=prompt_type, prompt_template_index=prompt_template_index,
-        d_name=d_name, correct_or_incorrect="correct",
-        task_relation_dict=task_relation_dict,
-        batch_size=batch_size, k=k, exp_size=exp_size,
-        n_match_list=n_match_list, task_list=task_list, 
-        component_type=component_type,
-        instruction_dict=instruction_dict,
-        save=True, save_root=save_root,     
-        k_list=k_list, n_match=n_match,
-        dataset_folder=dataset_folder,
-        remote=remote, save_path=save_path,
-    )
+    for prompt_template_index in prompt_template_idx_list: 
+        result = get_save_MAPS_scores_across_tasks_nnsight(
+            model=model, model_name=model_name,
+            prompt_type=prompt_type, prompt_template_index=prompt_template_index,
+            d_name=d_name, correct_or_incorrect="correct",
+            task_relation_dict=task_relation_dict,
+            batch_size=batch_size, k=k, exp_size=exp_size,
+            n_match_list=n_match_list, task_list=task_list, 
+            component_type=component_type,
+            instruction_dict=instruction_dict,
+            save=True, save_root=save_root,     
+            k_list=k_list, n_match=n_match,
+            dataset_folder=dataset_folder,
+            remote=remote, save_path=save_path,
+        )
    
