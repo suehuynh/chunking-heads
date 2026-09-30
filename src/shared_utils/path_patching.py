@@ -523,7 +523,7 @@ def path_patch_sender_to_receiver(
             torch.abs(baseline_diff), torch.tensor(epsilon, device=baseline_diff.device)
         )
 
-    # 2. Cache clean sender & corrupt activations -- unchanged
+    # 2. Cache clean sender & corrupt activations
     clean_attn_proxies, clean_mlp_proxies = {}, {}
     corrupt_attn_proxies, corrupt_mlp_proxies = {}, {}
 
@@ -724,7 +724,13 @@ if __name__ == "__main__":
     parser.add_argument("--positions", type=str, default="last", choices=["last", "all"],
         help="last: patch sender/receiver/freeze at the final token only. "
              "all: every token position; needs clean and corrupt prompts aligned token-by-token, "
-             "so it keeps only single-token inputs/outputs and cannot be used with --corruption_type zs")
+             "so it keeps only inputs/outputs of a fixed token length (--input_length/--output_length) "
+             "and cannot be used with --corruption_type zs")
+    parser.add_argument("--input_length", type=int, default=1,
+        help="--positions all only: keep dataset items whose input is exactly this many tokens "
+             "(e.g. 5 for park-country, whose park names are never a single token)")
+    parser.add_argument("--output_length", type=int, default=1,
+        help="--positions all only: keep dataset items whose output is exactly this many tokens")
     parser.add_argument("--model_name", type=str, required=True, 
             help="model name e.g. meta-llama/Llama-3.2-1B-Instruct")
     parser.add_argument("--d_name", type=str, required=True,)
@@ -822,10 +828,17 @@ if __name__ == "__main__":
             n_shot=prompt_temp_idx,
             batch_size=args.batch_size,
             dataset_folder=args.dataset_folder,
-            # all positions: single-token inputs/outputs so shuffling never changes a prompt's length
-            INPUT_LENGTH=1 if args.positions == "all" else None,
-            OUTPUT_LENGTH=1 if args.positions == "all" else None,
+            # all positions: fixed-length inputs/outputs so shuffling never changes a prompt's length
+            INPUT_LENGTH=args.input_length if args.positions == "all" else None,
+            OUTPUT_LENGTH=args.output_length if args.positions == "all" else None,
         )
+        if not clean_prompts:
+            raise ValueError(
+                f"no prompts left for {args.d_name}"
+                + (f": no dataset item has a {args.input_length}-token input and a {args.output_length}-token "
+                   f"output. Pick lengths that exist with --input_length/--output_length."
+                   if args.positions == "all" else "")
+            )
 
     # Zero-shot path patching only
     # corrupt_prompts = create_zs_prompts(dataset)
@@ -873,6 +886,8 @@ if __name__ == "__main__":
         corruption_dir = args.corruption_type if args.corruption_type == "zs" else f"{args.corruption_type}_seed{args.seed}"
         if args.positions == "all":
             corruption_dir += "_allpos"
+        elif args.positions == "last":
+                    corruption_dir += "_lastpos"
         save_dir = os.path.join(args.save_root, model_name, args.d_name, "path_patching_per_receiver", corruption_dir)
         os.makedirs(save_dir, exist_ok=True)
         save_path = os.path.join(save_dir, f"{args.prompt_type}_L{receiver[0]}H{receiver[1]}_batch_results_tensor.pt")
