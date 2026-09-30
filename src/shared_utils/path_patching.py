@@ -216,11 +216,11 @@ def path_patch_sender_to_receivers(
                     #  Step 1: Freeze layers BEFORE sender at freeze_pos
                     for current_layer in range(sender_layer):
                         if current_layer in corrupt_attn_proxies:
-                            accessor.layers[current_layer].attention.output.unwrap().input[:, freeze_pos][...] = (
+                            accessor.layers[current_layer].attention.output.unwrap().input[:, freeze_pos] = (
                                 _unwrap(corrupt_attn_proxies[current_layer])[:, freeze_pos].clone()
                             )
                         if current_layer in corrupt_mlp_proxies:
-                            accessor.layers[current_layer].mlp.unwrap().output[:, freeze_pos][...] = _unwrap(corrupt_mlp_proxies[current_layer])[:, freeze_pos].clone()
+                            accessor.layers[current_layer].mlp.unwrap().output[:, freeze_pos] = _unwrap(corrupt_mlp_proxies[current_layer])[:, freeze_pos].clone()
 
                     #  Step 2: Intervene at the SENDER layer
                     mlp_idx_sender = n_heads
@@ -242,7 +242,7 @@ def path_patch_sender_to_receivers(
                     else:  # Sender is MLP
                         # Freeze Attention Input first (causally before MLP)
                         if sender_layer in corrupt_attn_proxies:
-                            accessor.layers[sender_layer].attention.output.unwrap().input[:, freeze_pos][...] = (
+                            accessor.layers[sender_layer].attention.output.unwrap().input[:, freeze_pos] = (
                                 _unwrap(corrupt_attn_proxies[sender_layer])[:, freeze_pos].clone()
                             )
                         # Freeze-then-patch MLP Output
@@ -254,17 +254,18 @@ def path_patch_sender_to_receivers(
                     #  Step 3: Freeze INTERMEDIATE layers (after sender, before min_layer)
                     for current_layer in range(sender_layer + 1, min_layer):
                         if current_layer in corrupt_attn_proxies:
-                            accessor.layers[current_layer].attention.output.unwrap().input[:, freeze_pos][...] = (
+                            accessor.layers[current_layer].attention.output.unwrap().input[:, freeze_pos] = (
                                 _unwrap(corrupt_attn_proxies[current_layer])[:, freeze_pos].clone()
                             )
                         if current_layer in corrupt_mlp_proxies:
-                            accessor.layers[current_layer].mlp.unwrap().output[:, freeze_pos][...] = _unwrap(corrupt_mlp_proxies[current_layer])[:, freeze_pos].clone()
+                            accessor.layers[current_layer].mlp.unwrap().output[:, freeze_pos] = _unwrap(corrupt_mlp_proxies[current_layer])[:, freeze_pos].clone()
 
                     #  Step 4: Handle freezing ATTN heads at min_layer if earliest receiver is MLP
                     # This needs to happen *only if* min_layer was not the sender layer AND earliest receiver is MLP
                     if min_head_or_mlp == -1 and min_layer != sender_layer and min_layer in corrupt_attn_proxies:
-                        current_attn_input = accessor.layers[min_layer].attention.output.unwrap().input[:, freeze_pos]
-                        current_attn_input[...] = _unwrap(corrupt_attn_proxies[min_layer])[:, freeze_pos].clone()
+                        accessor.layers[min_layer].attention.output.unwrap().input[:, freeze_pos] = (
+                            _unwrap(corrupt_attn_proxies[min_layer])[:, freeze_pos].clone()
+                        )
 
                     #  Step 5: Let computation flow naturally for layers >= min_layer (unless ATTN frozen just above)
 
@@ -583,11 +584,11 @@ def path_patch_sender_to_receiver(
                 with tracer_run1.invoke(corrupt_tokens):
                     for current_layer in range(sender_layer):
                         if current_layer in corrupt_attn_proxies:
-                            accessor.layers[current_layer].attention.output.unwrap().input[:, freeze_pos][...] = (
+                            accessor.layers[current_layer].attention.output.unwrap().input[:, freeze_pos] = (
                                 _unwrap(corrupt_attn_proxies[current_layer])[:, freeze_pos].clone()
                             )
                         if current_layer in corrupt_mlp_proxies:
-                            accessor.layers[current_layer].mlp.unwrap().output[:, freeze_pos][...] = _unwrap(corrupt_mlp_proxies[current_layer])[:, freeze_pos].clone()
+                            accessor.layers[current_layer].mlp.unwrap().output[:, freeze_pos] = _unwrap(corrupt_mlp_proxies[current_layer])[:, freeze_pos].clone()
 
                     if is_sender_attn:
                         if sender_layer in corrupt_attn_proxies and sender_layer in clean_attn_proxies:
@@ -602,7 +603,7 @@ def path_patch_sender_to_receiver(
                             ].clone()
                     else:
                         if sender_layer in corrupt_attn_proxies:
-                            accessor.layers[sender_layer].attention.output.unwrap().input[:, freeze_pos][...] = (
+                            accessor.layers[sender_layer].attention.output.unwrap().input[:, freeze_pos] = (
                                 _unwrap(corrupt_attn_proxies[sender_layer])[:, freeze_pos].clone()
                             )
                         if sender_layer in corrupt_mlp_proxies and sender_layer in clean_mlp_proxies:
@@ -612,15 +613,16 @@ def path_patch_sender_to_receiver(
 
                     for current_layer in range(sender_layer + 1, min_layer):
                         if current_layer in corrupt_attn_proxies:
-                            accessor.layers[current_layer].attention.output.unwrap().input[:, freeze_pos][...] = (
+                            accessor.layers[current_layer].attention.output.unwrap().input[:, freeze_pos] = (
                                 _unwrap(corrupt_attn_proxies[current_layer])[:, freeze_pos].clone()
                             )
                         if current_layer in corrupt_mlp_proxies:
-                            accessor.layers[current_layer].mlp.unwrap().output[:, freeze_pos][...] = _unwrap(corrupt_mlp_proxies[current_layer])[:, freeze_pos].clone()
+                            accessor.layers[current_layer].mlp.unwrap().output[:, freeze_pos] = _unwrap(corrupt_mlp_proxies[current_layer])[:, freeze_pos].clone()
 
                     if min_head_or_mlp == -1 and min_layer != sender_layer and min_layer in corrupt_attn_proxies:
-                        current_attn_input = accessor.layers[min_layer].attention.output.unwrap().input[:, freeze_pos]
-                        current_attn_input[...] = _unwrap(corrupt_attn_proxies[min_layer])[:, freeze_pos].clone()
+                        accessor.layers[min_layer].attention.output.unwrap().input[:, freeze_pos] = (
+                            _unwrap(corrupt_attn_proxies[min_layer])[:, freeze_pos].clone()
+                        )
 
                     # Save just this one receiver's resulting activation
                     if rec_comp_idx < n_heads:
@@ -719,6 +721,10 @@ def path_patch_sender_to_receiver_batch(
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument("--positions", type=str, default="last", choices=["last", "all"],
+        help="last: patch sender/receiver/freeze at the final token only. "
+             "all: every token position; needs clean and corrupt prompts aligned token-by-token, "
+             "so it keeps only single-token inputs/outputs and cannot be used with --corruption_type zs")
     parser.add_argument("--model_name", type=str, required=True, 
             help="model name e.g. meta-llama/Llama-3.2-1B-Instruct")
     parser.add_argument("--d_name", type=str, required=True,)
@@ -749,6 +755,9 @@ if __name__ == "__main__":
     help="p: minimum fraction of prompts a head must match to count as a lexical task head")
 
     args = parser.parse_args()
+    if args.positions == "all" and args.corruption_type == "zs":
+        parser.error("--positions all needs a corrupt prompt with the same token layout as the clean one; "
+                     "a zero-shot prompt has none. Use a shuffle corruption.")
     # Random seed for shuffle input/output
     random.seed(args.seed)
 
@@ -813,12 +822,30 @@ if __name__ == "__main__":
             n_shot=prompt_temp_idx,
             batch_size=args.batch_size,
             dataset_folder=args.dataset_folder,
+            # all positions: single-token inputs/outputs so shuffling never changes a prompt's length
+            INPUT_LENGTH=1 if args.positions == "all" else None,
+            OUTPUT_LENGTH=1 if args.positions == "all" else None,
         )
 
     # Zero-shot path patching only
     # corrupt_prompts = create_zs_prompts(dataset)
 
     print(len(corrupt_prompts), len(clean_prompts), len(clean_answers))
+
+    if args.positions == "all":
+        # position p must mean the same thing in both prompts of every pair
+        clean_lens = [len(model.tokenizer(p)["input_ids"]) for p in clean_prompts]
+        corrupt_lens = [len(model.tokenizer(p)["input_ids"]) for p in corrupt_prompts]
+        misaligned = [i for i, (a, b) in enumerate(zip(clean_lens, corrupt_lens)) if a != b]
+        if misaligned:
+            i = misaligned[0]
+            raise ValueError(
+                f"{len(misaligned)}/{len(clean_prompts)} clean/corrupt pairs differ in token length, "
+                f"e.g. #{i}: {clean_lens[i]} vs {corrupt_lens[i]} tokens\n"
+                f"  clean  : {clean_prompts[i]!r}\n  corrupt: {corrupt_prompts[i]!r}"
+            )
+        print(f"all-position patching: {len(clean_prompts)} single-token prompt pairs, all aligned")
+    pos = "all_pos" if args.positions == "all" else [-1]
 
     # List of senders
     spec = get_model_specs(model)
@@ -839,12 +866,13 @@ if __name__ == "__main__":
             answers=clean_answers, receiver=receiver,
             min_layer=min_layer, min_head_or_mlp=min_head_or_mlp,
             max_sender_layer=max_sender_layer, result_shape=result_shape,
-            # batch_size=8, remote=args.remote, sender_pos=[-1], receiver_pos=[-1], freeze_pos=[-1])
-            batch_size=8, remote=args.remote, sender_pos="all_pos", receiver_pos="all_pos", freeze_pos="all_pos")
+            batch_size=8, remote=args.remote, sender_pos=pos, receiver_pos=pos, freeze_pos=pos)
         
         # save_dir = os.path.join(args.save_root, model_name, args.d_name, "path_patching")
         # shuffle corruptions are random: keep the seed in the folder so different draws never mix
         corruption_dir = args.corruption_type if args.corruption_type == "zs" else f"{args.corruption_type}_seed{args.seed}"
+        if args.positions == "all":
+            corruption_dir += "_allpos"
         save_dir = os.path.join(args.save_root, model_name, args.d_name, "path_patching_per_receiver", corruption_dir)
         os.makedirs(save_dir, exist_ok=True)
         save_path = os.path.join(save_dir, f"{args.prompt_type}_L{receiver[0]}H{receiver[1]}_batch_results_tensor.pt")
