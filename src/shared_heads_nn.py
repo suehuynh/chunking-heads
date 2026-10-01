@@ -23,7 +23,6 @@ def load_maps_scores(pkl_path: str) -> np.ndarray:
     with open(pkl_path, "rb") as f:
         return pickle.load(f)
 
-
 # def threshold_heads(maps_scores: np.ndarray, threshold: float):
 #     """
 #     Args:
@@ -115,7 +114,9 @@ if __name__ == "__main__":
         head_list, fraction_matched = threshold_heads(maps_scores, n_match_list=[1], task_list=task_list, threshold = args.threshold)
         print(f"{args.prompt_type} heads (p={args.threshold}): {len(head_list)} -> {head_list}")
         lexical_dict[f"{args.prompt_type}_{prompt_template_index}_p{args.threshold}"] = head_list
-    
+        print(f"{prompt_template_index}-shot")
+        for layer, head in head_list:
+            print(f"  Layer {layer}, Head {head}: matched {fraction_matched[layer, head]:.1%} of prompts")
     shared_heads = []
     for key, value in lexical_dict.items():
         for head in value:
@@ -133,9 +134,5 @@ if __name__ == "__main__":
         json.dump(
             shared_heads_output, f
         )
-    print(f"Saved shared head list to {save_path}")
-        # print(f"Loaded {pkl_path}")
-        # print(f"{args.prompt_type} template {args.template_key}, p={args.threshold}: {len(head_list)} heads")
-        # for layer, head in head_list:
-        #     print(f"  Layer {layer}, Head {head}: matched {fraction_matched[layer, head]:.1%} of prompts")
+    print(f"Saved shared head list to {save_path}") 
 
