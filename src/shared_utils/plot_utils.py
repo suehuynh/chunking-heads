@@ -83,22 +83,28 @@ def top_senders(df: pd.DataFrame, k: int = 5) -> pd.DataFrame:
 
 
 def plot_receiver_grid(tensors: dict[Receiver, torch.Tensor], title: str, n_cols: int = 2) -> go.Figure:
-    """One heatmap per receiver on a SHARED symmetric color scale, so
-    receivers are directly comparable (per-plot scaling would make a receiver
-    with tiny effects look as strong as one with large effects)."""
+    """One heatmap per receiver, each on its OWN symmetric color scale and
+    colorbar. Shows each receiver's internal structure, but colors are not
+    comparable across receivers -- read the colorbar values."""
     receivers = list(tensors)
-    vmax = max(t.abs().max().item() for t in tensors.values()) or 1.0
     n_rows = math.ceil(len(receivers) / n_cols)
-    fig = make_subplots(rows=n_rows, cols=n_cols, subplot_titles=[f"receiver {receiver_label(r)}" for r in receivers])
+    fig = make_subplots(rows=n_rows, cols=n_cols, horizontal_spacing=0.12,
+                        subplot_titles=[f"receiver {receiver_label(r)}" for r in receivers])
     for i, receiver in enumerate(receivers):
         t = tensors[receiver].numpy()
+        vmax = float(abs(t).max()) or 1.0
+        # place this subplot's colorbar just right of its own axes
+        suffix = "" if i == 0 else str(i + 1)
+        x_dom = fig.layout[f"xaxis{suffix}"].domain
+        y_dom = fig.layout[f"yaxis{suffix}"].domain
         fig.add_trace(
             go.Heatmap(
                 z=t,
                 x=sender_labels(t.shape[1]),
                 y=[f"L{l}" for l in range(t.shape[0])],
                 colorscale="RdBu", zmid=0, zmin=-vmax, zmax=vmax,
-                showscale=(i == 0), colorbar=dict(title="norm. logit<br>recovery"),
+                colorbar=dict(x=x_dom[1] + 0.01, y=(y_dom[0] + y_dom[1]) / 2,
+                              len=y_dom[1] - y_dom[0], thickness=12),
             ),
             row=i // n_cols + 1, col=i % n_cols + 1,
         )
