@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH -J path_patch_present_past
+#SBATCH -J path_patching_capitalize
 #SBATCH --partition=gpu
 #SBATCH --gres=gpu:1
 #SBATCH --cpus-per-task=4
@@ -22,7 +22,7 @@ MODEL="meta-llama/Llama-3.2-1B-Instruct"
 echo "=== running path-patching sweep (sender -> one receiver at a time) ==="
 python src/shared_utils/path_patching.py \
     --model_name "$MODEL" \
-    --d_name "antonym" \
+    --d_name "capitalize" \
     --prompt_type "EP" \
     --component_type "lexical_task" \
     --save_root "output" \
