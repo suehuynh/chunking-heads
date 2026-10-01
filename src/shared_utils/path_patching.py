@@ -746,12 +746,14 @@ if __name__ == "__main__":
         # default="../",
         default="",
         help="directory of the codebase ")
-    parser.add_argument("--batch_size", type=int, default=20, help="batch size")
+    parser.add_argument("--batch_size", type=int, default=8,
+        help="prompts per forward pass during path patching; raise it if GPU memory allows")
     parser.add_argument("--k", type=int, default=10, help="top k decoded tokens to look for match")
     parser.add_argument("--corruption_type", type=str, default="zs",
                         choices=["zs", "shuffle_input", "shuffle_output"],
                         help="create corrupted_prompts based on corruption_type")
-    parser.add_argument("--exp_size", type=int, default=100, help="number of examples to sample from the dataset")
+    parser.add_argument("--exp_size", type=int, default=300,
+        help="max prompts to path patch; tasks with more are randomly subsampled (seeded by --seed)")
     # parser.add_argument("--dataset_folder", type=str, default="../datasets/abstractive", help="folder of the dataset")
     parser.add_argument("--dataset_folder", type=str, default="datasets/abstractive", help="folder of the dataset")
     parser.add_argument("--remote", type=bool, default=False, help="whether to use NDIF to run model remotely")
@@ -839,6 +841,12 @@ if __name__ == "__main__":
                    f"output. Pick lengths that exist with --input_length/--output_length."
                    if args.positions == "all" else "")
             )
+        # cap the prompt count; datasets are sorted (e.g. by country), so sample instead of taking the first N
+        if len(clean_prompts) > args.exp_size:
+            keep = sorted(random.Random(args.seed).sample(range(len(clean_prompts)), args.exp_size))
+            clean_prompts = [clean_prompts[i] for i in keep]
+            corrupt_prompts = [corrupt_prompts[i] for i in keep]
+            clean_answers = [clean_answers[i] for i in keep]
 
     # Zero-shot path patching only
     # corrupt_prompts = create_zs_prompts(dataset)
@@ -879,7 +887,7 @@ if __name__ == "__main__":
             answers=clean_answers, receiver=receiver,
             min_layer=min_layer, min_head_or_mlp=min_head_or_mlp,
             max_sender_layer=max_sender_layer, result_shape=result_shape,
-            batch_size=8, remote=args.remote, sender_pos=pos, receiver_pos=pos, freeze_pos=pos)
+            batch_size=args.batch_size, remote=args.remote, sender_pos=pos, receiver_pos=pos, freeze_pos=pos)
         
         # save_dir = os.path.join(args.save_root, model_name, args.d_name, "path_patching")
         # shuffle corruptions are random: keep the seed in the folder so different draws never mix
