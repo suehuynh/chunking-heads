@@ -18,7 +18,7 @@
 # Args: TASK [POSITIONS=last] [CORRUPTION=shuffle_input] [INPUT_LENGTH=1]
 # Skip finished steps with START_AT, e.g.:  START_AT=4 sbatch oscar/run_pipeline.sbatch antonym
 # One-off receivers instead of the shared-LTH list (space-separated LAYER,HEAD):
-RECEIVERS="7,5" START_AT=4 sbatch -J pp_antonym_L7H5 oscar/run_pipeline.sbatch antonym all shuffle_input
+# RECEIVERS="7,5" START_AT=4 sbatch -J pp_antonym_L7H5 oscar/run_pipeline.sbatch antonym all shuffle_input
 
 set -euo pipefail
 mkdir -p logs
