@@ -761,6 +761,8 @@ if __name__ == "__main__":
         help="type of the task relation dict: human, llms, combined")
     parser.add_argument("--threshold", "-p", type=float, default=0.1,
     help="p: minimum fraction of prompts a head must match to count as a lexical task head")
+    parser.add_argument("--receivers", type=str, nargs="+", default=None, metavar="LAYER,HEAD",
+        help="one-off receivers, e.g. --receivers 7,5 9,4; replaces the shared-LTH JSON list")
 
     args = parser.parse_args()
     if args.positions == "all" and args.corruption_type == "zs":
@@ -800,8 +802,12 @@ if __name__ == "__main__":
         args.save_root, model_name, args.d_name, "Heads", "MAPS_nnsight",
         f"shared_{args.d_name}_heads_p{args.threshold}_k{args.k}.json",
     )
-    with open(save_path, "r") as f:
-        receiver_list = json.load(f)
+    if args.receivers is not None:
+        receiver_list = [[int(x) for x in r.split(",")] for r in args.receivers]
+    else:
+        with open(save_path, "r") as f:
+            receiver_list = json.load(f)
+    print("receivers:", receiver_list)
 
     # Load prompts
     if args.prompt_type == "EP":
