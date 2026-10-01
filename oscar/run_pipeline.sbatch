@@ -17,6 +17,8 @@
 #
 # Args: TASK [POSITIONS=last] [CORRUPTION=shuffle_input] [INPUT_LENGTH=1]
 # Skip finished steps with START_AT, e.g.:  START_AT=4 sbatch oscar/run_pipeline.sbatch antonym
+# One-off receivers instead of the shared-LTH list (space-separated LAYER,HEAD):
+RECEIVERS="7,5" START_AT=4 sbatch -J pp_antonym_L7H5 oscar/run_pipeline.sbatch antonym all shuffle_input
 
 set -euo pipefail
 mkdir -p logs
@@ -26,6 +28,8 @@ POSITIONS="${2:-last}"          # last | all
 CORRUPTION="${3:-shuffle_input}" # zs | shuffle_input | shuffle_output (zs only with POSITIONS=last)
 INPUT_LENGTH="${4:-1}"           # used only with POSITIONS=all (e.g. 5 for park-country)
 START_AT="${START_AT:-1}"
+RECEIVER_ARGS=()
+if [[ -n "${RECEIVERS:-}" ]]; then RECEIVER_ARGS=(--receivers $RECEIVERS); fi
 
 MODEL="meta-llama/Llama-3.2-1B-Instruct"
 PROMPT_TYPE="EP"
@@ -72,7 +76,7 @@ if (( START_AT <= 4 )); then
     python src/shared_utils/path_patching.py "${COMMON[@]}" --component_type lexical_task \
         --k "$K" --threshold "$THRESHOLD" --corruption_type "$CORRUPTION" \
         --positions "$POSITIONS" --input_length "$INPUT_LENGTH" \
-        --exp_size "$EXP_SIZE" --seed "$SEED" --batch_size "$BATCH_SIZE"
+        --exp_size "$EXP_SIZE" --seed "$SEED" --batch_size "$BATCH_SIZE" "${RECEIVER_ARGS[@]}"
 fi
 
 if (( START_AT <= 5 )); then
