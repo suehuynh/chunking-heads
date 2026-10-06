@@ -111,7 +111,8 @@ if __name__ == "__main__":
     model = LanguageModel(
         model_name,
         device_map="auto",
-        dispatch=True if not remote else False
+        dispatch=True if not remote else False,
+        dtype=torch.float32,  # transformers >= 5 otherwise loads the checkpoint dtype (bfloat16)
     )
     model_name = model_name.split("/")[-1]
     print("Model loaded")
