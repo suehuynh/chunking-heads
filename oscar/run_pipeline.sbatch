@@ -9,7 +9,7 @@
 #SBATCH -e logs/%x_%j.err
 #
 # Full pipeline for one task:
-#   behavior_variance -> identify_heads_nn -> shared_heads_nn -> path_patching -> plot_utils
+#   behavior_variance -> identify_heads_nn -> shared_heads_nn -> path_patching -> plot_utils -> top_edges
 #
 # Usage (from the repo root):
 #   sbatch -J pipeline_country-capital oscar/run_pipeline.sbatch country-capital
@@ -51,28 +51,28 @@ COMMON=(--model_name "$MODEL" --d_name "$TASK" --prompt_type "$PROMPT_TYPE"
 echo "=== $TASK | positions=$POSITIONS corruption=$CORRUPTION input_length=$INPUT_LENGTH | start at step $START_AT ==="
 
 if (( START_AT <= 1 )); then
-    echo "=== [1/5] behavior_variance ==="
-    # every task shares one behavior JSON (read-modify-write), so serialize this step across jobs
+    echo "=== [1/6] behavior_variance ==="
+    # every task shares one behavior JSON (read-modify-write)
     mkdir -p "output/$MODEL_SHORT/across_tasks/Behavior"
     flock "output/$MODEL_SHORT/across_tasks/Behavior/.lock" \
         python src/behavior_variance.py "${COMMON[@]}" --batch_size 20
 fi
 
 if (( START_AT <= 2 )); then
-    echo "=== [2/5] identify_heads_nn ==="
+    echo "=== [2/6] identify_heads_nn ==="
     # original identification: first --exp_size correct prompts (script default, 100) per shot count
     python src/identify_heads_nn.py "${COMMON[@]}" --component_type lexical_task \
         --k "$K" --batch_size 20
 fi
 
 if (( START_AT <= 3 )); then
-    echo "=== [3/5] shared_heads_nn ==="
+    echo "=== [3/6] shared_heads_nn ==="
     python src/shared_heads_nn.py "${COMMON[@]}" --component_type lexical_task \
         --k "$K" --threshold "$THRESHOLD"
 fi
 
 if (( START_AT <= 4 )); then
-    echo "=== [4/5] path_patching ==="
+    echo "=== [4/6] path_patching ==="
     python src/shared_utils/path_patching.py "${COMMON[@]}" --component_type lexical_task \
         --k "$K" --threshold "$THRESHOLD" --corruption_type "$CORRUPTION" \
         --positions "$POSITIONS" --input_length "$INPUT_LENGTH" \
@@ -80,13 +80,22 @@ if (( START_AT <= 4 )); then
 fi
 
 if (( START_AT <= 5 )); then
-    echo "=== [5/5] plot_utils ==="
+    echo "=== [5/6] plot_utils ==="
     # must match path_patching.py's save folder naming
     if [[ "$CORRUPTION" == "zs" ]]; then SUBDIR="zs"; else SUBDIR="${CORRUPTION}_seed${SEED}"; fi
     if [[ "$POSITIONS" == "all" ]]; then SUBDIR+="_allpos"; else SUBDIR+="_lastpos"; fi
     python src/shared_utils/plot_utils.py --model_name "$MODEL" --d_name "$TASK" \
         --prompt_type "$PROMPT_TYPE" --save_root output \
         --subdir "path_patching_per_receiver/$SUBDIR"
+fi
+
+if (( START_AT <= 6 )); then
+    echo "=== [6/6] top_edges ==="
+    # every task adds to one shared JSON
+    mkdir -p "output/$MODEL_SHORT/across_tasks/Behavior"
+    flock "output/$MODEL_SHORT/across_tasks/Behavior/.top_edges.lock" \
+        python src/top_edges.py --model_name "$MODEL" --d_name "$TASK" --prompt_type "$PROMPT_TYPE" \
+            --save_root output --corruption_type "$CORRUPTION" --seed "$SEED" --positions "$POSITIONS"
 fi
 
 echo "=== done: $TASK ==="
