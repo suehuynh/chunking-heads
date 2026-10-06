@@ -2,7 +2,10 @@ import torch
 from typing import Union
 import numpy as np
 from nnsight import LanguageModel
-from transformer_lens import HookedTransformer
+try:
+    from transformer_lens import HookedTransformer
+except ImportError:  # transformer_lens >= 4 dropped this top-level name; the nnsight pipeline only uses it as a type hint
+    HookedTransformer = None
 import torch.nn.functional as F
 import random
 import os
