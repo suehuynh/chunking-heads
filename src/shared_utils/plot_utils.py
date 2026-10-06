@@ -112,6 +112,41 @@ def plot_receiver_grid(tensors: dict[Receiver, torch.Tensor], title: str, n_cols
     return fig
 
 
+def plot_stacked_counts(
+    df: pd.DataFrame,
+    label_col: str,
+    stack_cols: list[str],
+    facet_col: str,
+    top_n: int = 20,
+    stack_names: list[str] | None = None,
+    title: str = "",
+    y_title: str = "times in top-k",
+) -> go.Figure:
+    """One stacked bar chart per value of facet_col (titled by that value).
+    Bars are rows of df labeled by label_col, one stacked segment per stack_col,
+    sorted by their total (highest first) and cut to top_n."""
+    facets = list(df[facet_col].unique())
+    stack_names = stack_names or stack_cols
+    colors = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728"]
+    fig = make_subplots(rows=len(facets), cols=1, subplot_titles=[str(f) for f in facets],
+                        vertical_spacing=0.25 / max(len(facets), 1))
+    for i, facet in enumerate(facets):
+        g = df[df[facet_col] == facet].assign(_total=lambda d: d[stack_cols].sum(axis=1))
+        g = g.sort_values("_total", ascending=False, kind="stable").head(top_n)
+        for j, (col, name) in enumerate(zip(stack_cols, stack_names)):
+            fig.add_trace(
+                go.Bar(
+                    x=g[label_col], y=g[col], name=name, legendgroup=name, showlegend=(i == 0),
+                    marker_color=colors[j % len(colors)], customdata=g["_total"],
+                    hovertemplate="%{x}<br>" + name + ": %{y}<br>total: %{customdata}<extra></extra>",
+                ),
+                row=i + 1, col=1,
+            )
+        fig.update_yaxes(title_text=y_title, row=i + 1, col=1)
+    fig.update_layout(barmode="stack", height=350 * len(facets), title=title)
+    return fig
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--model_name", type=str, required=True,
@@ -132,7 +167,7 @@ def main() -> None:
     print(f"loaded {len(tensors)} receivers from {pp_dir}: {[receiver_label(r) for r in tensors]}")
 
     df = results_to_dataframe(tensors)
-    # outputs live inside the experiment's own folder, so one neutral name is enough
+    # outputs live inside the experiment's own folder
     csv_path = pp_dir / f"{args.prompt_type}_path_patching_summary.csv"
     df.to_csv(csv_path, index=False)
     print(f"saved {len(df)} rows to {csv_path}")
