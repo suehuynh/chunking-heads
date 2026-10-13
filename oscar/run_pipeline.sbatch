@@ -19,20 +19,26 @@
 # Skip finished steps with START_AT, e.g.:  START_AT=4 sbatch oscar/run_pipeline.sbatch antonym
 # One-off receivers instead of the shared-LTH list (space-separated LAYER,HEAD):
 # RECEIVERS="7,5" START_AT=4 sbatch -J pp_antonym_L7H5 oscar/run_pipeline.sbatch antonym all shuffle_input
+# Instruction prompts (IP; last position only; corruptions random_query | relation | zs | minimal):
+#   PROMPT_TYPE=IP sbatch -J ip_country-capital oscar/run_pipeline.sbatch country-capital last random_query
+#   PROMPT_TYPE=IP CORRUPT_TASK=antonym START_AT=4 sbatch oscar/run_pipeline.sbatch country-capital last relation
 
 set -euo pipefail
 mkdir -p logs
 
 TASK="${1:?usage: sbatch oscar/run_pipeline.sbatch TASK [POSITIONS] [CORRUPTION] [INPUT_LENGTH]}"
 POSITIONS="${2:-last}"          # last | all
-CORRUPTION="${3:-shuffle_input}" # zs | shuffle_input | shuffle_output (zs only with POSITIONS=last)
+CORRUPTION="${3:-shuffle_input}" # EP: zs | shuffle_input | shuffle_output; IP: random_query | relation | zs | minimal
 INPUT_LENGTH="${4:-1}"           # used only with POSITIONS=all (e.g. 5 for park-country)
 START_AT="${START_AT:-1}"
 RECEIVER_ARGS=()
 if [[ -n "${RECEIVERS:-}" ]]; then RECEIVER_ARGS=(--receivers $RECEIVERS); fi
+CORRUPT_TASK="${CORRUPT_TASK:-}"  # IP relation corruption: the task whose instruction replaces the clean one
+CORRUPT_ARGS=()
+if [[ -n "$CORRUPT_TASK" ]]; then CORRUPT_ARGS=(--corrupt_task "$CORRUPT_TASK"); fi
 
 MODEL="meta-llama/Llama-3.2-1B-Instruct"
-PROMPT_TYPE="EP"
+PROMPT_TYPE="${PROMPT_TYPE:-EP}"   # EP (few-shot) | IP (instruction)
 EXP_SIZE=300   # path patching only: max prompts; tasks with fewer use all they have
 SEED=42
 K=10
@@ -48,7 +54,7 @@ MODEL_SHORT="${MODEL##*/}"
 COMMON=(--model_name "$MODEL" --d_name "$TASK" --prompt_type "$PROMPT_TYPE"
         --save_root output --project_root "$REPO_ROOT" --dataset_folder datasets/abstractive)
 
-echo "=== $TASK | positions=$POSITIONS corruption=$CORRUPTION input_length=$INPUT_LENGTH | start at step $START_AT ==="
+echo "=== $TASK $PROMPT_TYPE | positions=$POSITIONS corruption=$CORRUPTION${CORRUPT_TASK:+ ($CORRUPT_TASK)} input_length=$INPUT_LENGTH | start at step $START_AT ==="
 
 if (( START_AT <= 1 )); then
     echo "=== [1/6] behavior_variance ==="
@@ -60,7 +66,8 @@ fi
 
 if (( START_AT <= 2 )); then
     echo "=== [2/6] identify_heads_nn ==="
-    # original identification: first --exp_size correct prompts (script default, 100) per shot count
+    # original identification: first --exp_size correct prompts (script default, 100) per template
+    # (EP: shot counts 5/10/20/30; IP: instruction templates 0-4)
     python src/identify_heads_nn.py "${COMMON[@]}" --component_type lexical_task \
         --k "$K" --batch_size 20
 fi
@@ -76,14 +83,13 @@ if (( START_AT <= 4 )); then
     python src/shared_utils/path_patching.py "${COMMON[@]}" --component_type lexical_task \
         --k "$K" --threshold "$THRESHOLD" --corruption_type "$CORRUPTION" \
         --positions "$POSITIONS" --input_length "$INPUT_LENGTH" \
-        --exp_size "$EXP_SIZE" --seed "$SEED" --batch_size "$BATCH_SIZE" "${RECEIVER_ARGS[@]}"
+        --exp_size "$EXP_SIZE" --seed "$SEED" --batch_size "$BATCH_SIZE" "${RECEIVER_ARGS[@]}" "${CORRUPT_ARGS[@]}"
 fi
 
 if (( START_AT <= 5 )); then
     echo "=== [5/6] plot_utils ==="
-    # must match path_patching.py's save folder naming
-    if [[ "$CORRUPTION" == "zs" ]]; then SUBDIR="zs"; else SUBDIR="${CORRUPTION}_seed${SEED}"; fi
-    if [[ "$POSITIONS" == "all" ]]; then SUBDIR+="_allpos"; else SUBDIR+="_lastpos"; fi
+    # same folder naming as path_patching.py (one shared function)
+    SUBDIR=$(python -c 'import sys; sys.path.insert(0, "src"); from shared_utils.plot_utils import results_subdir; print(results_subdir(sys.argv[1], int(sys.argv[2]), sys.argv[3], sys.argv[4] or None))'         "$CORRUPTION" "$SEED" "$POSITIONS" "$CORRUPT_TASK")
     python src/shared_utils/plot_utils.py --model_name "$MODEL" --d_name "$TASK" \
         --prompt_type "$PROMPT_TYPE" --save_root output \
         --subdir "path_patching_per_receiver/$SUBDIR"
@@ -95,7 +101,7 @@ if (( START_AT <= 6 )); then
     mkdir -p "output/$MODEL_SHORT/across_tasks/Behavior"
     flock "output/$MODEL_SHORT/across_tasks/Behavior/.top_edges.lock" \
         python src/top_edges.py --model_name "$MODEL" --d_name "$TASK" --prompt_type "$PROMPT_TYPE" \
-            --save_root output --corruption_type "$CORRUPTION" --seed "$SEED" --positions "$POSITIONS"
+            --save_root output --corruption_type "$CORRUPTION" --seed "$SEED" --positions "$POSITIONS"             "${CORRUPT_ARGS[@]}"
 fi
 
 echo "=== done: $TASK ==="

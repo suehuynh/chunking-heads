@@ -4,5 +4,5 @@ transformers
 torch
 tqdm
 einops
-gc
-pickle
+pandas
+plotly

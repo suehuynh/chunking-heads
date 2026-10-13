@@ -45,6 +45,42 @@ def create_few_shot_prompts(data, n_shot, delimiter, q_bos, a_bos, qa_delimiter)
 
     return prompts, answers, query_index
 
+def build_chunk_labeled_prompts(data, tokenizer, n_shot, query_indices,
+    delimiter=";", q_bos=" ", a_bos=" ", qa_delimiter=":"):
+    """
+    Few-shot prompts (same string as create_few_shot_prompts) with a chunk role for every token:
+    bos, n_shot x [input, separator, output, separator], query, last_token.
+    Each fragment's tokens are the token-count change of the growing prefix, so roles line up
+    with the real tokenization even when a word is several tokens.
+    Returns one dict per prompt: prompt, input_ids, roles, labels (f"{i}_{role}_{token}").
+    """
+    n_bos = len(tokenizer("")["input_ids"])
+    results = []
+    for i in query_indices:
+        fragments = []
+        for j in range(i - n_shot, i):
+            example = data[j]
+            fragments += [("input", f"{q_bos}{example['input']}"), ("separator", qa_delimiter),
+                          ("output", f"{a_bos}{example['output']}"), ("separator", delimiter)]
+        fragments += [("query", f"{q_bos}{data[i]['input']}"), ("last_token", qa_delimiter)]
+
+        prompt, roles = "", ["bos"] * n_bos
+        for role, text in fragments:
+            prompt += text
+            roles += [role] * (len(tokenizer(prompt)["input_ids"]) - len(roles))
+        input_ids = tokenizer(prompt)["input_ids"]
+        assert len(roles) == len(input_ids), f"role/token mismatch for prompt {prompt!r}"
+
+        str_tokens = [tokenizer.decode([t]) for t in input_ids]
+        results.append({
+            "prompt": prompt,
+            "input_ids": input_ids,
+            "roles": roles,
+            "labels": [f"{p}_{role}_{tok}" for p, (role, tok) in enumerate(zip(roles, str_tokens))],
+            "query_index": i,
+        })
+    return results
+
 def create_random_output_prompts(data, n_shot, delimiter, q_bos, a_bos, qa_delimiter):
     prompts = []
 
@@ -346,7 +382,8 @@ def generate_instruction_prompts(
     model=None, instruction=None, instruction_corrupt=None,
     corruption_type="relation", filter_correct=True,
     output_correct_index=False, correct_index_list=None,
-    dataset_folder:str="../datasets/abstractive",
+    # dataset_folder:str="../datasets/abstractive",
+    dataset_folder:str="datasets/abstractive",
 ):
     """
     TODO: generate corrupt query prompts based on optimal token length for each task
@@ -501,7 +538,8 @@ def generate_instruction_prompts_from_index(
     d_name=None, index_list=None,
     instruction=None, instruction_corrupt=None,
     corruption_type="random_query", 
-    dataset_folder:str="../datasets/abstractive",
+    # dataset_folder:str="../datasets/abstractive",
+    dataset_folder:str="datasets/abstractive",
 ):
     """
     TODO: generate corrupt query prompts based on optimal token length for each task

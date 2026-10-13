@@ -11,7 +11,8 @@ from torch import Tensor
 from tqdm.auto import tqdm
 
 from wrapper import ModelAccessor, get_accessor_config, get_model_specs
-from prompt_utils import generate_few_shot_prompts, create_few_shot_prompts, create_zs_prompts, create_corrupt_prompts_input_shuffle, create_corrupt_prompts_output_shuffle
+from prompt_utils import generate_few_shot_prompts, generate_instruction_prompts, create_few_shot_prompts, create_zs_prompts, create_corrupt_prompts_input_shuffle, create_corrupt_prompts_output_shuffle
+from plot_utils import EP_CORRUPTIONS, IP_CORRUPTIONS, results_subdir
 
 
 def _unwrap(saved):
@@ -750,8 +751,14 @@ if __name__ == "__main__":
         help="prompts per forward pass during path patching; raise it if GPU memory allows")
     parser.add_argument("--k", type=int, default=10, help="top k decoded tokens to look for match")
     parser.add_argument("--corruption_type", type=str, default="zs",
-                        choices=["zs", "shuffle_input", "shuffle_output"],
-                        help="create corrupted_prompts based on corruption_type")
+                        choices=sorted(set(EP_CORRUPTIONS) | set(IP_CORRUPTIONS)),
+                        help=f"EP: {EP_CORRUPTIONS}; IP: {IP_CORRUPTIONS} "
+                             "(random_query: input -> filler token; relation: another task's instruction; "
+                             "zs: ' {input}:' only; minimal: ':' only)")
+    parser.add_argument("--template", type=int, default=None,
+        help="IP only: instruction template index; default: the one with the best IP accuracy in the behavior file")
+    parser.add_argument("--corrupt_task", type=str, default=None,
+        help="IP relation corruption only: task whose instruction (same template) replaces the clean one")
     parser.add_argument("--exp_size", type=int, default=300,
         help="max prompts to path patch; tasks with more are randomly subsampled (seeded by --seed)")
     # parser.add_argument("--dataset_folder", type=str, default="../datasets/abstractive", help="folder of the dataset")
@@ -765,9 +772,17 @@ if __name__ == "__main__":
         help="one-off receivers, e.g. --receivers 7,5 9,4; replaces the shared-LTH JSON list")
 
     args = parser.parse_args()
-    if args.positions == "all" and args.corruption_type == "zs":
+    allowed = {"EP": EP_CORRUPTIONS, "IP": IP_CORRUPTIONS}.get(args.prompt_type)
+    if allowed is None:
+        parser.error(f"--prompt_type must be EP or IP, got {args.prompt_type}")
+    if args.corruption_type not in allowed:
+        parser.error(f"--corruption_type {args.corruption_type} is not an {args.prompt_type} corruption; use one of {allowed}")
+    if args.corruption_type == "relation" and (args.corrupt_task is None or args.corrupt_task == args.d_name):
+        parser.error("--corruption_type relation needs --corrupt_task <another task>")
+    if args.positions == "all" and args.corruption_type not in ("shuffle_input", "shuffle_output"):
         parser.error("--positions all needs a corrupt prompt with the same token layout as the clean one; "
-                     "a zero-shot prompt has none. Use a shuffle corruption.")
+                     "only the EP shuffle corruptions keep it (zero-shot and every IP corruption change the "
+                     "prompt's length). Use --positions last.")
     # Random seed for shuffle input/output
     random.seed(args.seed)
 
@@ -798,10 +813,11 @@ if __name__ == "__main__":
     model_name = args.model_name.split("/")[-1]
     print("Model loaded")
 
-    # Load receiver list
+    # Load receiver list (shared_heads_nn.py: EP keeps the original name, IP gets an IP_ tag)
+    type_tag = "" if args.prompt_type == "EP" else f"{args.prompt_type}_"
     save_path = os.path.join(
         args.save_root, model_name, args.d_name, "Heads", "MAPS_nnsight",
-        f"shared_{args.d_name}_heads_p{args.threshold}_k{args.k}.json",
+        f"shared_{args.d_name}_{type_tag}heads_p{args.threshold}_k{args.k}.json",
     )
     if args.receivers is not None:
         receiver_list = [[int(x) for x in r.split(",")] for r in args.receivers]
@@ -822,32 +838,60 @@ if __name__ == "__main__":
         # prompt_temp_idx_list = [1,2,3,4,5,10,20,30]
         prompt_temp_idx_list = [5]
     elif args.prompt_type == "IP":
-        file_name = "IP_vary_n_inst_behavior.json"
-        prompt_temp_idx_list = [0,1,2,3,4]
+        with open(os.path.join(args.project_root, "datasets", "dataset_info", "instruction_dict.json")) as f:
+            instruction_dict = json.load(f)
+        if args.template is None:
+            # best-accuracy instruction template among those behavior_variance.py scored
+            with open(os.path.join(args.save_root, model_name, "across_tasks", "Behavior",
+                                   "IP_vary_n_inst_behavior.json")) as f:
+                ip_behavior = json.load(f)[args.d_name]
+            args.template = int(max(ip_behavior, key=lambda t: ip_behavior[t]["accuracy"]))
+        print(f"IP template {args.template}: {instruction_dict[args.d_name][str(args.template)]!r}")
+        prompt_temp_idx_list = [args.template]
     else:
         raise ValueError(f"prompt_type {args.prompt_type} not supported")
     
     for prompt_temp_idx in prompt_temp_idx_list:
-        # generate_few_shot_prompts loads the dataset itself
-        clean_prompts, corrupt_prompts, clean_answers = generate_few_shot_prompts(
-            d_name=args.d_name,
-            model=model,
-            corruption_type=args.corruption_type,
-            filter_correct=False,
-            n_shot=prompt_temp_idx,
-            batch_size=args.batch_size,
-            dataset_folder=args.dataset_folder,
-            # all positions: fixed-length inputs/outputs so shuffling never changes a prompt's length
-            INPUT_LENGTH=args.input_length if args.positions == "all" else None,
-            OUTPUT_LENGTH=args.output_length if args.positions == "all" else None,
-        )
-        if not clean_prompts:
-            raise ValueError(
-                f"no prompts left for {args.d_name}"
-                + (f": no dataset item has a {args.input_length}-token input and a {args.output_length}-token "
-                   f"output. Pick lengths that exist with --input_length/--output_length."
-                   if args.positions == "all" else "")
+        if args.prompt_type == "EP":
+            # generate_few_shot_prompts loads the dataset itself
+            clean_prompts, corrupt_prompts, clean_answers = generate_few_shot_prompts(
+                d_name=args.d_name,
+                model=model,
+                corruption_type=args.corruption_type,
+                filter_correct=False,
+                n_shot=prompt_temp_idx,
+                batch_size=args.batch_size,
+                dataset_folder=args.dataset_folder,
+                # all positions: fixed-length inputs/outputs so shuffling never changes a prompt's length
+                INPUT_LENGTH=args.input_length if args.positions == "all" else None,
+                OUTPUT_LENGTH=args.output_length if args.positions == "all" else None,
             )
+            if not clean_prompts:
+                raise ValueError(
+                    f"no prompts left for {args.d_name}"
+                    + (f": no dataset item has a {args.input_length}-token input and a {args.output_length}-token "
+                    f"output. Pick lengths that exist with --input_length/--output_length."
+                    if args.positions == "all" else "")
+                )
+        elif args.prompt_type == "IP":
+            instruction = instruction_dict[args.d_name][str(prompt_temp_idx)]
+            # relation: another task's instruction; random_query: same instruction, input -> filler token
+            instruction_corrupt = {
+                "relation": instruction_dict[args.corrupt_task][str(prompt_temp_idx)] if args.corrupt_task else None,
+                "random_query": instruction,
+            }.get(args.corruption_type)
+            # generate_instruction_prompts loads the dataset itself
+            clean_prompts, corrupt_prompts, clean_answers = generate_instruction_prompts(
+                d_name=args.d_name,
+                model=model,
+                instruction=instruction,
+                instruction_corrupt=instruction_corrupt,
+                corruption_type=args.corruption_type,
+                filter_correct=False,
+                dataset_folder=args.dataset_folder,
+            )
+            if not clean_prompts:
+                raise ValueError(f"no prompts for {args.d_name}")
         # cap the prompt count; datasets are sorted (e.g. by country), so sample instead of taking the first N
         if len(clean_prompts) > args.exp_size:
             keep = sorted(random.Random(args.seed).sample(range(len(clean_prompts)), args.exp_size))
@@ -897,14 +941,17 @@ if __name__ == "__main__":
             batch_size=args.batch_size, remote=args.remote, sender_pos=pos, receiver_pos=pos, freeze_pos=pos)
         
         # save_dir = os.path.join(args.save_root, model_name, args.d_name, "path_patching")
-        # shuffle corruptions are random: keep the seed in the folder so different draws never mix
-        corruption_dir = args.corruption_type if args.corruption_type == "zs" else f"{args.corruption_type}_seed{args.seed}"
-        if args.positions == "all":
-            corruption_dir += "_allpos"
-        elif args.positions == "last":
-                    corruption_dir += "_lastpos"
+        corruption_dir = results_subdir(args.corruption_type, args.seed, args.positions, args.corrupt_task)
         save_dir = os.path.join(args.save_root, model_name, args.d_name, "path_patching_per_receiver", corruption_dir)
         os.makedirs(save_dir, exist_ok=True)
         save_path = os.path.join(save_dir, f"{args.prompt_type}_L{receiver[0]}H{receiver[1]}_batch_results_tensor.pt")
-        torch.save(results, save_path) 
+        torch.save(results, save_path)
         print(f"Saved logit diff for {receiver} to {save_path}")
+
+    # what this run used, next to its results (EP and IP files can share a folder, e.g. zs_lastpos)
+    with open(os.path.join(save_dir, f"{args.prompt_type}_run_info.json"), "w") as f:
+        json.dump({"prompt_type": args.prompt_type, "template": prompt_temp_idx_list[-1],
+                   "corruption_type": args.corruption_type, "corrupt_task": args.corrupt_task,
+                   "positions": args.positions, "seed": args.seed, "n_prompts": len(clean_prompts),
+                   "receivers": receiver_list, "example_clean": clean_prompts[0],
+                   "example_corrupt": corrupt_prompts[0]}, f, indent=2)

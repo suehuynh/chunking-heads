@@ -8,6 +8,7 @@ Reads the summary CSV plot_utils.py writes to
 Usage:
     python src/top_edges.py --d_name country-capital --corruption_type shuffle_input --seed 42 --positions all
     python src/top_edges.py --d_name country-capital --corruption_type zs --positions last
+    python src/top_edges.py --d_name country-capital --prompt_type IP --corruption_type relation --corrupt_task antonym --positions last
 """
 import argparse
 import json
@@ -15,11 +16,7 @@ import os
 
 import pandas as pd
 
-
-def results_subdir(corruption_type: str, seed: int, positions: str) -> str:
-    """Folder name path_patching.py writes to (the seed only applies to shuffles)."""
-    name = corruption_type if corruption_type == "zs" else f"{corruption_type}_seed{seed}"
-    return name + ("_allpos" if positions == "all" else "_lastpos")
+from shared_utils.plot_utils import EP_CORRUPTIONS, IP_CORRUPTIONS, results_subdir
 
 
 def top_edges_per_receiver(df: pd.DataFrame, top_k: int) -> dict[str, list[str]]:
@@ -37,8 +34,9 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--d_name", type=str, required=True, help="task, e.g. country-capital")
     parser.add_argument("--corruption_type", type=str, required=True,
-                        choices=["zs", "shuffle_input", "shuffle_output"])
-    parser.add_argument("--seed", type=int, default=42, help="shuffle seed of the run (ignored for zs)")
+                        choices=sorted(set(EP_CORRUPTIONS) | set(IP_CORRUPTIONS)))
+    parser.add_argument("--seed", type=int, default=42, help="shuffle seed of the run (only used by shuffles)")
+    parser.add_argument("--corrupt_task", type=str, default=None, help="IP relation runs: the corrupting task")
     parser.add_argument("--positions", type=str, default="all", choices=["last", "all"])
     parser.add_argument("--top_k", type=int, default=10)
     parser.add_argument("--model_name", type=str, default="meta-llama/Llama-3.2-1B-Instruct")
@@ -48,7 +46,7 @@ def main() -> None:
 
     model_dir = os.path.join(args.save_root, args.model_name.split("/")[-1])
     runs_dir = os.path.join(model_dir, args.d_name, "path_patching_per_receiver")
-    subdir = results_subdir(args.corruption_type, args.seed, args.positions)
+    subdir = results_subdir(args.corruption_type, args.seed, args.positions, args.corrupt_task)
     if subdir == "zs_lastpos" and not os.path.isdir(os.path.join(runs_dir, subdir)):
         subdir = "zs"  # runs from before the _lastpos suffix existed
     csv_path = os.path.join(runs_dir, subdir, f"{args.prompt_type}_path_patching_summary.csv")

@@ -131,16 +131,8 @@ if __name__ == "__main__":
         raise ValueError(f"task_relation_dict_type {task_relation_dict_type} not supported")
 
     if prompt_type == "IP":
-        ## load behavior results
-        with open(os.path.join(save_root, model_name,
-            "across_tasks", "Behavior", "IP_vary_n_inst_behavior.json"), "r") as f:
-            result_dict_IP_tasks = json.load(f)
-            
-        ## get best acc index
-            acc_list = [result_dict_IP_tasks[d_name][str(i)]['accuracy'] for i in range(5)]
-            best_index = np.argmax(acc_list).item()
-            prompt_template_index = best_index
-            prompt_template_idx_list = [prompt_template_index]
+        # every instruction template behavior_variance.py scored; shared_heads_nn.py takes the union
+        prompt_template_idx_list = [0, 1, 2, 3, 4]
     elif prompt_type == "EP":
         # prompt_template_index = 5
         prompt_template_idx_list = [5, 10, 20, 30]

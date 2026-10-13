@@ -23,11 +23,28 @@ from pathlib import Path
 import pandas as pd
 import plotly.graph_objects as go
 import torch
+from plotly.colors import qualitative, sample_colorscale
 from plotly.subplots import make_subplots
 
 Receiver = tuple[int, int]
 
 _FILENAME_RE = re.compile(r"^(?P<ptype>\w+?)_L(?P<layer>-?\d+)[CH](?P<comp>-?\d+)_batch_results_tensor\.pt$")
+
+
+EP_CORRUPTIONS = ["zs", "shuffle_input", "shuffle_output"]
+IP_CORRUPTIONS = ["random_query", "relation", "zs", "minimal"]
+
+
+def results_subdir(corruption_type: str, seed: int, positions: str, corrupt_task: str | None = None) -> str:
+    """Folder name under path_patching_per_receiver/ that path_patching.py writes to.
+    Only the shuffles are random, so only they carry the seed; relation names the corrupting task."""
+    if corruption_type.startswith("shuffle"):
+        name = f"{corruption_type}_seed{seed}"
+    elif corruption_type == "relation":
+        name = f"relation_{corrupt_task}"
+    else:
+        name = corruption_type
+    return name + ("_allpos" if positions == "all" else "_lastpos")
 
 
 def path_patching_dir(save_root: str, model_name: str, d_name: str, subdir: str) -> Path:
@@ -112,6 +129,13 @@ def plot_receiver_grid(tensors: dict[Receiver, torch.Tensor], title: str, n_cols
     return fig
 
 
+def distinct_colors(n: int) -> list[str]:
+    """n distinct colors: plotly's qualitative palettes (58 colors) first, then evenly spaced
+    samples of a continuous scale, so adding categories never reuses a color."""
+    palette = list(dict.fromkeys(qualitative.Plotly + qualitative.Dark24 + qualitative.Light24))
+    return palette[:n] if n <= len(palette) else sample_colorscale("Turbo", [i / (n - 1) for i in range(n)])
+
+
 def plot_stacked_counts(
     df: pd.DataFrame,
     label_col: str,
@@ -127,7 +151,7 @@ def plot_stacked_counts(
     sorted by their total (highest first) and cut to top_n."""
     facets = list(df[facet_col].unique())
     stack_names = stack_names or stack_cols
-    colors = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728"]
+    colors = distinct_colors(len(stack_cols))
     fig = make_subplots(rows=len(facets), cols=1, subplot_titles=[str(f) for f in facets],
                         vertical_spacing=0.25 / max(len(facets), 1))
     for i, facet in enumerate(facets):
@@ -144,6 +168,45 @@ def plot_stacked_counts(
             )
         fig.update_yaxes(title_text=y_title, row=i + 1, col=1)
     fig.update_layout(barmode="stack", height=350 * len(facets), title=title)
+    return fig
+
+
+def plot_rsa_matrix(sim: torch.Tensor, labels: list[str], title: str,
+                    zmin: float = -1.0, zmax: float = 1.0,
+                    position_hover: list[str] | None = None) -> go.Figure:
+    """Position x position similarity heatmap; labels must be unique (e.g. f"{i}_{role}_{token}").
+    position_hover: optional extra text per position (e.g. that position's token in every prompt)."""
+    hover = None
+    if position_hover is not None:
+        hover = [[f"row: {position_hover[r]}<br>col: {position_hover[c]}" for c in range(len(labels))]
+                 for r in range(len(labels))]
+    fig = go.Figure(go.Heatmap(
+        z=sim.detach().cpu().numpy(), x=labels, y=labels,
+        colorscale="Viridis", zmin=zmin, zmax=zmax, colorbar=dict(title="cosine<br>similarity"),
+        text=hover,
+        hovertemplate="%{y}  x  %{x}<br>similarity: %{z:.3f}" + ("<br>%{text}" if hover else "") + "<extra></extra>",
+    ))
+    fig.update_xaxes(tickmode="linear", dtick=1, tickangle=90)
+    fig.update_yaxes(tickmode="linear", dtick=1, autorange="reversed")
+    fig.update_layout(title=title, width=900, height=900)
+    return fig
+
+
+def plot_rsa_grid(sims: torch.Tensor, labels_per_prompt: list[list[str]], titles: list[str],
+                  n_cols: int = 4, zmin: float = -1.0, zmax: float = 1.0, title: str = "") -> go.Figure:
+    """One similarity heatmap per prompt (sims: [n_prompts, seq, seq]) on a shared scale."""
+    n_rows = math.ceil(len(titles) / n_cols)
+    fig = make_subplots(rows=n_rows, cols=n_cols, subplot_titles=titles,
+                        horizontal_spacing=0.03, vertical_spacing=0.06)
+    for i, (sim, labels) in enumerate(zip(sims, labels_per_prompt)):
+        fig.add_trace(
+            go.Heatmap(z=sim.detach().cpu().numpy(), x=labels, y=labels, colorscale="Viridis",
+                       zmin=zmin, zmax=zmax, showscale=(i == 0), colorbar=dict(title="cosine<br>similarity")),
+            row=i // n_cols + 1, col=i % n_cols + 1,
+        )
+    fig.update_xaxes(showticklabels=False)
+    fig.update_yaxes(showticklabels=False, autorange="reversed")
+    fig.update_layout(title=title, width=350 * n_cols, height=350 * n_rows)
     return fig
 
 

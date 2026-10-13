@@ -82,6 +82,9 @@ if __name__ == "__main__":
         help="type of the task relation dict: human, llms, combined")
     parser.add_argument("--threshold", "-p", type=float, default=0.1,
     help="p: minimum fraction of prompts a head must match to count as a lexical task head")
+    parser.add_argument("--templates", type=int, nargs="+", default=None,
+        help="prompt templates to take the union over: shot counts for EP (default 5 10 20 30), "
+             "instruction templates for IP (default 0 1 2 3 4)")
 
     args = parser.parse_args()
 
@@ -101,11 +104,12 @@ if __name__ == "__main__":
     if args.component_type == "lexical_task":
         component_type = "Relation"
 
-    # prompt_template_indices = [5, 10, 20, 30] # EP
-    # prompt_template_indices = [30]
-    prompt_template_indices = [3]
+    default_templates = {"EP": [5, 10, 20, 30], "IP": [0, 1, 2, 3, 4]}
+    prompt_template_indices = args.templates or default_templates[args.prompt_type]
+    template_name = "shot" if args.prompt_type == "EP" else "inst"  # EP templates are shot counts
     lexical_dict = defaultdict(list)
     model_short_name = args.model_name.split("/")[-1]
+    save_dir = os.path.join(args.save_root, model_short_name, args.d_name, "Heads", "MAPS_nnsight")
     for prompt_template_index in prompt_template_indices:
         pkl_path = maps_pickle_path(
             args.save_root, model_short_name, 
@@ -116,9 +120,14 @@ if __name__ == "__main__":
         head_list, fraction_matched = threshold_heads(maps_scores, n_match_list=[1], task_list=task_list, threshold = args.threshold)
         print(f"{args.prompt_type} heads (p={args.threshold}): {len(head_list)} -> {head_list}")
         lexical_dict[f"{args.prompt_type}_{prompt_template_index}_p{args.threshold}"] = head_list
-        print(f"{prompt_template_index}-shot")
+        print(f"{prompt_template_index}-{template_name}")
         for layer, head in head_list:
             print(f"  Layer {layer}, Head {head}: matched {fraction_matched[layer, head]:.1%} of prompts")
+        # per-template list
+        template_path = os.path.join(
+            save_dir, f"{prompt_template_index}_{template_name}_{args.d_name}_heads_p{args.threshold}_k{args.k}.json")
+        with open(template_path, "w") as f:
+            json.dump(head_list, f)
     shared_heads = []
     for key, value in lexical_dict.items():
         for head in value:
@@ -127,14 +136,11 @@ if __name__ == "__main__":
             shared_heads.append(head)
     shared_heads.sort()
     shared_heads_output = [tuple(item) for item in shared_heads] 
-    save_dir = os.path.join(args.save_root, model_short_name, args.d_name, "Heads", "MAPS_nnsight")
-    # save_path = os.path.join(
-    #     save_dir,
-    #     f"shared_{args.d_name}_heads_p{args.threshold}_k{args.k}.json",
-    # )
+    # union over templates = the receivers path_patching.py reads (EP keeps its original name)
+    type_tag = "" if args.prompt_type == "EP" else f"{args.prompt_type}_"
     save_path = os.path.join(
         save_dir,
-        f"{prompt_template_index}_shot_{args.d_name}_heads_p{args.threshold}_k{args.k}.json",
+        f"shared_{args.d_name}_{type_tag}heads_p{args.threshold}_k{args.k}.json",
     )
     with open(save_path, "w") as f:
         json.dump(
