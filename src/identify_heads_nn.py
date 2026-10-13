@@ -140,6 +140,7 @@ if __name__ == "__main__":
             acc_list = [result_dict_IP_tasks[d_name][str(i)]['accuracy'] for i in range(5)]
             best_index = np.argmax(acc_list).item()
             prompt_template_index = best_index
+            prompt_template_idx_list = [prompt_template_index]
     elif prompt_type == "EP":
         # prompt_template_index = 5
         prompt_template_idx_list = [5, 10, 20, 30]
