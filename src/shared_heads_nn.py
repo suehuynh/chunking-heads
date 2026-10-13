@@ -101,7 +101,9 @@ if __name__ == "__main__":
     if args.component_type == "lexical_task":
         component_type = "Relation"
 
-    prompt_template_indices = [5, 10, 20, 30]
+    # prompt_template_indices = [5, 10, 20, 30] # EP
+    # prompt_template_indices = [30]
+    prompt_template_indices = [3]
     lexical_dict = defaultdict(list)
     model_short_name = args.model_name.split("/")[-1]
     for prompt_template_index in prompt_template_indices:
@@ -126,9 +128,13 @@ if __name__ == "__main__":
     shared_heads.sort()
     shared_heads_output = [tuple(item) for item in shared_heads] 
     save_dir = os.path.join(args.save_root, model_short_name, args.d_name, "Heads", "MAPS_nnsight")
+    # save_path = os.path.join(
+    #     save_dir,
+    #     f"shared_{args.d_name}_heads_p{args.threshold}_k{args.k}.json",
+    # )
     save_path = os.path.join(
         save_dir,
-        f"shared_{args.d_name}_heads_p{args.threshold}_k{args.k}.json",
+        f"{prompt_template_index}_shot_{args.d_name}_heads_p{args.threshold}_k{args.k}.json",
     )
     with open(save_path, "w") as f:
         json.dump(
