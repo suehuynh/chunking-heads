@@ -1,0 +1,363 @@
+task,sender,sender_layer,n_lth,count,count_shuffle_input_seed42_allpos,count_shuffle_output_seed42_allpos,important_to,n_important_to,n_downstream_lth
+antonym,L7H5,7,7,7,4,3,L8H31 L9H21 L9H4 L10H16,4,6
+antonym,L7H28,7,7,7,4,3,L8H31 L9H21 L10H16 L13H15,4,6
+antonym,L6H14,6,7,5,3,2,L8H31 L9H21 L9H4,3,6
+antonym,L8H31,8,7,5,3,2,L9H21 L9H4 L10H16,3,4
+antonym,L5MLP,5,7,4,2,2,L8H31 L9H21,2,6
+antonym,L8H29,8,7,4,2,2,L9H21 L9H4,2,4
+antonym,L8MLP,8,7,4,2,2,L9H4 L10H16,2,4
+antonym,L8H23,8,7,4,2,2,L9H21 L9H4,2,4
+antonym,L2MLP,2,7,3,1,2,L8H31 L13H15,2,6
+antonym,L5H6,5,7,3,1,2,L8H31 L9H4,2,6
+antonym,L8H27,8,7,3,2,1,L9H4 L13H15,2,4
+antonym,L0H23,0,7,2,1,1,L2H20,1,7
+antonym,L0H0,0,7,2,1,1,L8H3 L9H21,2,7
+antonym,L1H23,1,7,2,1,1,L2H20 L8H3,2,7
+antonym,L1MLP,1,7,2,1,1,L2H20,1,7
+antonym,L1H2,1,7,2,2,0,L2H20 L8H3,2,7
+antonym,L1H19,1,7,2,1,1,L2H20,1,7
+antonym,L4H9,4,7,2,0,2,L8H31 L9H21,2,6
+antonym,L7H20,7,7,2,2,0,L8H31 L9H4,2,6
+antonym,L7H26,7,7,2,1,1,L8H31 L9H4,2,6
+antonym,L7H6,7,7,2,2,0,L8H3 L9H21,2,6
+antonym,L7H8,7,7,2,1,1,L8H3,1,6
+antonym,L7H21,7,7,2,0,2,L8H3 L8H31,2,6
+antonym,L8H24,8,7,2,1,1,L10H16,1,4
+antonym,L9H8,9,7,2,1,1,L10H16,1,2
+antonym,L9MLP,9,7,2,1,1,L10H16,1,2
+antonym,L9H20,9,7,2,1,1,L10H16,1,2
+antonym,L9H21,9,7,2,1,1,L10H16,1,2
+antonym,L9H7,9,7,2,1,1,L10H16,1,2
+antonym,L11H23,11,7,2,1,1,L13H15,1,1
+antonym,L0H30,0,7,1,0,1,L2H20,1,7
+antonym,L0H1,0,7,1,0,1,L8H3,1,7
+antonym,L0H17,0,7,1,1,0,L2H20,1,7
+antonym,L0H22,0,7,1,0,1,L2H20,1,7
+antonym,L0H28,0,7,1,0,1,L2H20,1,7
+antonym,L0H13,0,7,1,1,0,L2H20,1,7
+antonym,L0H12,0,7,1,0,1,L2H20,1,7
+antonym,L0H27,0,7,1,0,1,L9H4,1,7
+antonym,L1H24,1,7,1,0,1,L2H20,1,7
+antonym,L1H25,1,7,1,1,0,L2H20,1,7
+antonym,L1H22,1,7,1,0,1,L2H20,1,7
+antonym,L1H20,1,7,1,1,0,L2H20,1,7
+antonym,L1H27,1,7,1,0,1,L2H20,1,7
+antonym,L1H26,1,7,1,1,0,L2H20,1,7
+antonym,L2H29,2,7,1,0,1,L8H3,1,6
+antonym,L2H23,2,7,1,0,1,L8H3,1,6
+antonym,L2H25,2,7,1,0,1,L13H15,1,6
+antonym,L3H6,3,7,1,1,0,L13H15,1,6
+antonym,L3H13,3,7,1,0,1,L9H21,1,6
+antonym,L3MLP,3,7,1,1,0,L8H3,1,6
+antonym,L3H8,3,7,1,1,0,L8H3,1,6
+antonym,L4MLP,4,7,1,1,0,L8H31,1,6
+antonym,L4H1,4,7,1,1,0,L9H4,1,6
+antonym,L4H31,4,7,1,1,0,L9H21,1,6
+antonym,L5H15,5,7,1,0,1,L8H3,1,6
+antonym,L5H22,5,7,1,0,1,L8H3,1,6
+antonym,L6H25,6,7,1,1,0,L8H3,1,6
+antonym,L6MLP,6,7,1,0,1,L8H31,1,6
+antonym,L6H28,6,7,1,0,1,L9H4,1,6
+antonym,L6H29,6,7,1,0,1,L8H3,1,6
+antonym,L6H7,6,7,1,1,0,L13H15,1,6
+antonym,L7H4,7,7,1,0,1,L8H31,1,6
+antonym,L7MLP,7,7,1,1,0,L8H3,1,6
+antonym,L7H27,7,7,1,1,0,L8H3,1,6
+antonym,L7H29,7,7,1,0,1,L13H15,1,6
+antonym,L7H30,7,7,1,1,0,L8H31,1,6
+antonym,L7H18,7,7,1,0,1,L8H3,1,6
+antonym,L7H9,7,7,1,1,0,L9H21,1,6
+antonym,L7H31,7,7,1,0,1,L8H31,1,6
+antonym,L7H10,7,7,1,1,0,L8H3,1,6
+antonym,L8H28,8,7,1,0,1,L13H15,1,4
+antonym,L8H8,8,7,1,1,0,L13H15,1,4
+antonym,L8H26,8,7,1,1,0,L9H4,1,4
+antonym,L8H9,8,7,1,0,1,L9H4,1,4
+antonym,L9H31,9,7,1,0,1,L13H15,1,2
+antonym,L10H18,10,7,1,0,1,L13H15,1,1
+antonym,L10H16,10,7,1,1,0,L13H15,1,1
+antonym,L10MLP,10,7,1,0,1,L13H15,1,1
+antonym,L11H31,11,7,1,1,0,L13H15,1,1
+antonym,L11H26,11,7,1,1,0,L13H15,1,1
+antonym,L11H22,11,7,1,1,0,L13H15,1,1
+antonym,L11H17,11,7,1,0,1,L13H15,1,1
+antonym,L12H29,12,7,1,0,1,L13H15,1,1
+country-capital,L0H0,0,10,7,1,6,L5H8 L8H13 L9H4 L11H17 L11H22 L13H11,6,10
+country-capital,L6H17,6,10,6,3,3,L7H5 L8H13 L9H4 L12H27,4,8
+country-capital,L6MLP,6,10,5,2,3,L7H5 L8H13 L9H4,3,8
+country-capital,L1H15,1,10,4,0,4,L11H17 L11H22 L12H24 L12H27,4,10
+country-capital,L1H7,1,10,4,1,3,L5H11 L12H24 L12H27,3,10
+country-capital,L4MLP,4,10,4,2,2,L7H5 L8H13,2,10
+country-capital,L7H5,7,10,4,2,2,L8H13 L9H4 L13H11,3,7
+country-capital,L0H8,0,10,3,1,2,L5H8 L12H27,2,10
+country-capital,L0H18,0,10,3,1,2,L5H8 L11H17 L11H22,3,10
+country-capital,L0MLP,0,10,3,1,2,L12H27 L13H11,2,10
+country-capital,L0H19,0,10,3,1,2,L5H8 L9H4 L12H24,3,10
+country-capital,L1H9,1,10,3,1,2,L11H22 L12H24 L12H27,3,10
+country-capital,L1H28,1,10,3,0,3,L11H17 L12H24 L12H27,3,10
+country-capital,L1H18,1,10,3,1,2,L5H11 L11H22,2,10
+country-capital,L1H20,1,10,3,1,2,L5H11 L9H4 L12H24,3,10
+country-capital,L1H26,1,10,3,0,3,L5H11 L11H22 L12H24,3,10
+country-capital,L2H1,2,10,3,2,1,L5H11 L11H17 L12H27,3,10
+country-capital,L5H6,5,10,3,2,1,L7H5 L11H17,2,8
+country-capital,L5MLP,5,10,3,1,2,L7H5 L8H13,2,8
+country-capital,L6H18,6,10,3,2,1,L7H5 L9H4,2,8
+country-capital,L0H6,0,10,2,0,2,L5H11 L11H22,2,10
+country-capital,L0H30,0,10,2,1,1,L12H24 L13H11,2,10
+country-capital,L0H25,0,10,2,0,2,L11H17 L13H11,2,10
+country-capital,L0H14,0,10,2,1,1,L5H8 L9H4,2,10
+country-capital,L0H13,0,10,2,1,1,L7H5 L11H17,2,10
+country-capital,L0H10,0,10,2,0,2,L11H22 L13H11,2,10
+country-capital,L1MLP,1,10,2,1,1,L5H11 L11H22,2,10
+country-capital,L1H14,1,10,2,1,1,L8H13 L11H22,2,10
+country-capital,L1H12,1,10,2,1,1,L5H11,1,10
+country-capital,L1H31,1,10,2,0,2,L5H11 L11H17,2,10
+country-capital,L1H1,1,10,2,0,2,L5H11 L13H11,2,10
+country-capital,L1H30,1,10,2,1,1,L5H11 L9H4,2,10
+country-capital,L1H29,1,10,2,2,0,L5H11 L7H5,2,10
+country-capital,L1H6,1,10,2,0,2,L11H17 L13H11,2,10
+country-capital,L1H5,1,10,2,0,2,L5H8 L13H11,2,10
+country-capital,L2H3,2,10,2,1,1,L5H11 L12H27,2,10
+country-capital,L2H23,2,10,2,2,0,L5H11 L11H22,2,10
+country-capital,L2H27,2,10,2,2,0,L5H11 L11H17,2,10
+country-capital,L2H17,2,10,2,2,0,L11H17 L12H24,2,10
+country-capital,L3H14,3,10,2,2,0,L5H8 L8H13,2,10
+country-capital,L3H3,3,10,2,2,0,L5H11 L5H8,2,10
+country-capital,L4H14,4,10,2,2,0,L9H4 L12H27,2,10
+country-capital,L4H10,4,10,2,2,0,L8H13 L11H17,2,10
+country-capital,L5H4,5,10,2,1,1,L7H5,1,8
+country-capital,L6H31,6,10,2,1,1,L7H5 L9H4,2,8
+country-capital,L6H4,6,10,2,2,0,L9H4 L12H24,2,8
+country-capital,L6H6,6,10,2,1,1,L7H5,1,8
+country-capital,L7H4,7,10,2,1,1,L8H13 L9H4,2,7
+country-capital,L7H26,7,10,2,0,2,L8H13 L9H4,2,7
+country-capital,L7H24,7,10,2,0,2,L8H13 L9H4,2,7
+country-capital,L10MLP,10,10,2,1,1,L13H11,1,5
+country-capital,L0H31,0,10,1,1,0,L5H8,1,10
+country-capital,L0H23,0,10,1,0,1,L13H11,1,10
+country-capital,L0H20,0,10,1,0,1,L5H8,1,10
+country-capital,L0H3,0,10,1,0,1,L7H5,1,10
+country-capital,L0H29,0,10,1,1,0,L12H27,1,10
+country-capital,L0H9,0,10,1,0,1,L11H17,1,10
+country-capital,L0H5,0,10,1,0,1,L9H4,1,10
+country-capital,L0H28,0,10,1,0,1,L12H27,1,10
+country-capital,L0H21,0,10,1,0,1,L5H8,1,10
+country-capital,L0H12,0,10,1,0,1,L9H4,1,10
+country-capital,L0H11,0,10,1,1,0,L8H13,1,10
+country-capital,L0H16,0,10,1,0,1,L5H8,1,10
+country-capital,L1H23,1,10,1,1,0,L8H13,1,10
+country-capital,L1H24,1,10,1,0,1,L12H24,1,10
+country-capital,L1H25,1,10,1,0,1,L11H22,1,10
+country-capital,L1H22,1,10,1,1,0,L12H24,1,10
+country-capital,L1H0,1,10,1,1,0,L9H4,1,10
+country-capital,L1H8,1,10,1,0,1,L5H8,1,10
+country-capital,L1H2,1,10,1,0,1,L12H24,1,10
+country-capital,L1H3,1,10,1,1,0,L11H22,1,10
+country-capital,L1H4,1,10,1,0,1,L12H24,1,10
+country-capital,L1H21,1,10,1,1,0,L12H24,1,10
+country-capital,L1H10,1,10,1,0,1,L5H8,1,10
+country-capital,L2H18,2,10,1,1,0,L11H22,1,10
+country-capital,L2H11,2,10,1,0,1,L12H24,1,10
+country-capital,L2H7,2,10,1,0,1,L11H17,1,10
+country-capital,L2H24,2,10,1,0,1,L12H24,1,10
+country-capital,L2H2,2,10,1,0,1,L12H27,1,10
+country-capital,L2H25,2,10,1,1,0,L12H24,1,10
+country-capital,L2MLP,2,10,1,1,0,L11H22,1,10
+country-capital,L2H15,2,10,1,0,1,L12H27,1,10
+country-capital,L2H14,2,10,1,1,0,L11H17,1,10
+country-capital,L2H10,2,10,1,1,0,L12H27,1,10
+country-capital,L3H21,3,10,1,1,0,L11H17,1,10
+country-capital,L3H24,3,10,1,1,0,L8H13,1,10
+country-capital,L3H23,3,10,1,1,0,L5H8,1,10
+country-capital,L3H9,3,10,1,1,0,L11H22,1,10
+country-capital,L3H28,3,10,1,1,0,L12H27,1,10
+country-capital,L3MLP,3,10,1,1,0,L5H8,1,10
+country-capital,L3H4,3,10,1,1,0,L5H11,1,10
+country-capital,L3H27,3,10,1,1,0,L11H22,1,10
+country-capital,L3H25,3,10,1,1,0,L5H8,1,10
+country-capital,L4H3,4,10,1,1,0,L8H13,1,10
+country-capital,L4H12,4,10,1,1,0,L5H8,1,10
+country-capital,L4H13,4,10,1,1,0,L5H8,1,10
+country-capital,L5H25,5,10,1,1,0,L13H11,1,8
+country-capital,L5H2,5,10,1,1,0,L8H13,1,8
+country-capital,L5H3,5,10,1,1,0,L11H22,1,8
+country-capital,L5H15,5,10,1,1,0,L12H24,1,8
+country-capital,L5H22,5,10,1,1,0,L11H17,1,8
+country-capital,L5H21,5,10,1,1,0,L12H27,1,8
+country-capital,L6H19,6,10,1,0,1,L8H13,1,8
+country-capital,L6H9,6,10,1,1,0,L12H27,1,8
+country-capital,L7MLP,7,10,1,1,0,L13H11,1,7
+country-capital,L7H6,7,10,1,1,0,L11H22,1,7
+country-capital,L7H8,7,10,1,1,0,L12H24,1,7
+country-capital,L7H16,7,10,1,1,0,L11H17,1,7
+country-capital,L8H12,8,10,1,1,0,L12H27,1,6
+country-capital,L9H8,9,10,1,1,0,L13H11,1,5
+country-capital,L9H25,9,10,1,1,0,L11H22,1,5
+country-capital,L9H16,9,10,1,1,0,L13H11,1,5
+country-capital,L10H2,10,10,1,1,0,L13H11,1,5
+country-capital,L10H21,10,10,1,1,0,L13H11,1,5
+country-capital,L10H25,10,10,1,1,0,L13H11,1,5
+country-capital,L10H13,10,10,1,1,0,L13H11,1,5
+park-country,L7H28,7,8,4,0,4,L9H15 L11H22 L11H25 L15H30,4,7
+park-country,L1H12,1,8,3,2,1,L5H11 L15H30,2,8
+park-country,L1H19,1,8,3,2,1,L5H11 L11H17 L11H25,3,8
+park-country,L1H26,1,8,3,2,1,L5H11 L11H22 L15H30,3,8
+park-country,L5H27,5,8,3,2,1,L9H15 L12H24 L12H27,3,7
+park-country,L6H29,6,8,3,2,1,L11H22 L11H25 L12H27,3,7
+park-country,L0H23,0,8,2,1,1,L11H17 L11H25,2,8
+park-country,L0H14,0,8,2,1,1,L5H11 L11H17,2,8
+park-country,L0H19,0,8,2,1,1,L12H27,1,8
+park-country,L0H21,0,8,2,0,2,L11H17 L12H24,2,8
+park-country,L0H4,0,8,2,1,1,L9H15 L12H27,2,8
+park-country,L1H22,1,8,2,0,2,L11H25 L12H27,2,8
+park-country,L2H3,2,8,2,1,1,L12H27 L15H30,2,8
+park-country,L2H25,2,8,2,2,0,L5H11 L15H30,2,8
+park-country,L2H13,2,8,2,1,1,L5H11 L11H17,2,8
+park-country,L2H12,2,8,2,0,2,L5H11 L11H25,2,8
+park-country,L3MLP,3,8,2,0,2,L5H11 L9H15,2,8
+park-country,L3H7,3,8,2,0,2,L11H17 L12H27,2,8
+park-country,L3H10,3,8,2,1,1,L12H27,1,8
+park-country,L3H5,3,8,2,1,1,L5H11 L15H30,2,8
+park-country,L5H10,5,8,2,0,2,L11H17 L12H24,2,7
+park-country,L5H4,5,8,2,1,1,L11H17 L15H30,2,7
+park-country,L6MLP,6,8,2,2,0,L11H17 L11H25,2,7
+park-country,L7H4,7,8,2,1,1,L12H24 L12H27,2,7
+park-country,L7H5,7,8,2,0,2,L9H15 L11H22,2,7
+park-country,L7H11,7,8,2,1,1,L9H15 L12H27,2,7
+park-country,L8H17,8,8,2,2,0,L12H24 L12H27,2,7
+park-country,L8H7,8,8,2,1,1,L11H17 L15H30,2,7
+park-country,L10H20,10,8,2,0,2,L11H22 L15H30,2,6
+park-country,L0H6,0,8,1,0,1,L11H25,1,8
+park-country,L0H17,0,8,1,1,0,L9H15,1,8
+park-country,L0H20,0,8,1,1,0,L9H15,1,8
+park-country,L0H24,0,8,1,1,0,L11H22,1,8
+park-country,L0H5,0,8,1,0,1,L11H22,1,8
+park-country,L0MLP,0,8,1,1,0,L5H11,1,8
+park-country,L0H28,0,8,1,1,0,L9H15,1,8
+park-country,L0H11,0,8,1,1,0,L12H24,1,8
+park-country,L0H16,0,8,1,1,0,L11H22,1,8
+park-country,L1H23,1,8,1,0,1,L11H25,1,8
+park-country,L1H11,1,8,1,0,1,L11H17,1,8
+park-country,L1H17,1,8,1,1,0,L9H15,1,8
+park-country,L1H3,1,8,1,0,1,L11H25,1,8
+park-country,L1H18,1,8,1,1,0,L15H30,1,8
+park-country,L1H27,1,8,1,0,1,L11H22,1,8
+park-country,L1H21,1,8,1,0,1,L12H24,1,8
+park-country,L1H10,1,8,1,1,0,L9H15,1,8
+park-country,L2H5,2,8,1,1,0,L15H30,1,8
+park-country,L2H29,2,8,1,1,0,L11H22,1,8
+park-country,L2H21,2,8,1,0,1,L5H11,1,8
+park-country,L2H1,2,8,1,1,0,L11H25,1,8
+park-country,L2H31,2,8,1,0,1,L12H27,1,8
+park-country,L2H4,2,8,1,0,1,L12H24,1,8
+park-country,L2H7,2,8,1,1,0,L5H11,1,8
+park-country,L2H2,2,8,1,1,0,L15H30,1,8
+park-country,L2H27,2,8,1,0,1,L5H11,1,8
+park-country,L2H8,2,8,1,0,1,L5H11,1,8
+park-country,L2H10,2,8,1,1,0,L12H27,1,8
+park-country,L2H30,2,8,1,1,0,L5H11,1,8
+park-country,L3H11,3,8,1,0,1,L5H11,1,8
+park-country,L3H30,3,8,1,0,1,L12H24,1,8
+park-country,L3H26,3,8,1,1,0,L5H11,1,8
+park-country,L3H31,3,8,1,0,1,L12H24,1,8
+park-country,L3H9,3,8,1,1,0,L11H17,1,8
+park-country,L3H2,3,8,1,1,0,L5H11,1,8
+park-country,L3H13,3,8,1,1,0,L15H30,1,8
+park-country,L3H20,3,8,1,1,0,L12H24,1,8
+park-country,L3H8,3,8,1,1,0,L12H24,1,8
+park-country,L3H17,3,8,1,1,0,L9H15,1,8
+park-country,L3H29,3,8,1,1,0,L15H30,1,8
+park-country,L4H3,4,8,1,1,0,L11H22,1,8
+park-country,L4H16,4,8,1,0,1,L11H17,1,8
+park-country,L4H11,4,8,1,0,1,L12H24,1,8
+park-country,L4H6,4,8,1,1,0,L5H11,1,8
+park-country,L4H28,4,8,1,1,0,L11H17,1,8
+park-country,L4MLP,4,8,1,0,1,L9H15,1,8
+park-country,L4H4,4,8,1,1,0,L12H27,1,8
+park-country,L5H23,5,8,1,0,1,L12H24,1,7
+park-country,L5H5,5,8,1,0,1,L11H25,1,7
+park-country,L5H30,5,8,1,0,1,L11H22,1,7
+park-country,L5H3,5,8,1,0,1,L11H17,1,7
+park-country,L5H0,5,8,1,1,0,L11H22,1,7
+park-country,L5H19,5,8,1,1,0,L11H22,1,7
+park-country,L5H13,5,8,1,0,1,L11H22,1,7
+park-country,L6H17,6,8,1,0,1,L9H15,1,7
+park-country,L6H3,6,8,1,1,0,L11H25,1,7
+park-country,L6H19,6,8,1,0,1,L9H15,1,7
+park-country,L6H4,6,8,1,0,1,L11H22,1,7
+park-country,L6H1,6,8,1,0,1,L9H15,1,7
+park-country,L6H5,6,8,1,0,1,L15H30,1,7
+park-country,L6H6,6,8,1,0,1,L11H22,1,7
+park-country,L6H11,6,8,1,1,0,L11H22,1,7
+park-country,L7MLP,7,8,1,0,1,L9H15,1,7
+park-country,L7H26,7,8,1,0,1,L9H15,1,7
+park-country,L7H19,7,8,1,1,0,L12H24,1,7
+park-country,L8H19,8,8,1,1,0,L11H17,1,7
+park-country,L8H21,8,8,1,0,1,L11H22,1,7
+park-country,L8H9,8,8,1,1,0,L11H25,1,7
+park-country,L8H20,8,8,1,1,0,L9H15,1,7
+park-country,L8H18,8,8,1,0,1,L11H17,1,7
+park-country,L8H11,8,8,1,1,0,L9H15,1,7
+park-country,L8H25,8,8,1,0,1,L11H17,1,7
+park-country,L9H30,9,8,1,0,1,L15H30,1,6
+park-country,L9H12,9,8,1,0,1,L12H24,1,6
+park-country,L9H8,9,8,1,1,0,L11H25,1,6
+park-country,L9H23,9,8,1,0,1,L11H25,1,6
+park-country,L9H25,9,8,1,1,0,L11H25,1,6
+park-country,L9H0,9,8,1,1,0,L11H17,1,6
+park-country,L9MLP,9,8,1,1,0,L11H25,1,6
+park-country,L9H7,9,8,1,0,1,L11H17,1,6
+park-country,L10H2,10,8,1,1,0,L11H22,1,6
+park-country,L10H17,10,8,1,1,0,L12H24,1,6
+park-country,L10H10,10,8,1,0,1,L11H25,1,6
+park-country,L10H31,10,8,1,0,1,L12H27,1,6
+park-country,L10MLP,10,8,1,1,0,L11H25,1,6
+park-country,L10H11,10,8,1,1,0,L12H27,1,6
+park-country,L10H7,10,8,1,0,1,L15H30,1,6
+park-country,L11H10,11,8,1,1,0,L12H27,1,3
+park-country,L11H1,11,8,1,1,0,L12H27,1,3
+park-country,L11H6,11,8,1,1,0,L12H24,1,3
+park-country,L11H19,11,8,1,1,0,L12H24,1,3
+park-country,L11H30,11,8,1,1,0,L12H24,1,3
+park-country,L12H18,12,8,1,0,1,L15H30,1,1
+park-country,L13MLP,13,8,1,1,0,L15H30,1,1
+park-country,L14H4,14,8,1,0,1,L15H30,1,1
+present-past,L3MLP,3,3,3,2,1,L4H12 L9H15,2,3
+present-past,L1MLP,1,3,2,1,1,L4H12,1,3
+present-past,L2MLP,2,3,2,1,1,L4H12,1,3
+present-past,L3H30,3,3,2,1,1,L4H12,1,3
+present-past,L6MLP,6,3,2,1,1,L9H15,1,2
+present-past,L7MLP,7,3,2,1,1,L9H15,1,2
+present-past,L7H13,7,3,2,1,1,L9H15,1,2
+present-past,L7H9,7,3,2,1,1,L9H15,1,2
+present-past,L8H9,8,3,2,1,1,L9H15,1,2
+present-past,L8MLP,8,3,2,1,1,L9H15,1,2
+present-past,L9H8,9,3,2,1,1,L13H11,1,1
+present-past,L9H16,9,3,2,1,1,L13H11,1,1
+present-past,L10H21,10,3,2,1,1,L13H11,1,1
+present-past,L10H13,10,3,2,1,1,L13H11,1,1
+present-past,L10MLP,10,3,2,1,1,L13H11,1,1
+present-past,L11H5,11,3,2,1,1,L13H11,1,1
+present-past,L11MLP,11,3,2,1,1,L13H11,1,1
+present-past,L11H14,11,3,2,1,1,L13H11,1,1
+present-past,L12MLP,12,3,2,1,1,L13H11,1,1
+present-past,L12H13,12,3,2,1,1,L13H11,1,1
+present-past,L0MLP,0,3,1,1,0,L4H12,1,3
+present-past,L1H26,1,3,1,1,0,L4H12,1,3
+present-past,L1H27,1,3,1,1,0,L4H12,1,3
+present-past,L2H29,2,3,1,0,1,L4H12,1,3
+present-past,L2H26,2,3,1,0,1,L4H12,1,3
+present-past,L2H7,2,3,1,0,1,L4H12,1,3
+present-past,L2H19,2,3,1,0,1,L4H12,1,3
+present-past,L2H20,2,3,1,0,1,L4H12,1,3
+present-past,L3H11,3,3,1,1,0,L4H12,1,3
+present-past,L3H15,3,3,1,1,0,L4H12,1,3
+present-past,L3H19,3,3,1,0,1,L4H12,1,3
+present-past,L3H18,3,3,1,1,0,L4H12,1,3
+present-past,L4H19,4,3,1,0,1,L9H15,1,2
+present-past,L4H13,4,3,1,1,0,L9H15,1,2
+present-past,L5MLP,5,3,1,1,0,L9H15,1,2
+present-past,L6H6,6,3,1,0,1,L9H15,1,2
+present-past,L7H28,7,3,1,0,1,L9H15,1,2
+present-past,L7H8,7,3,1,1,0,L9H15,1,2
+present-past,L8H17,8,3,1,0,1,L9H15,1,2

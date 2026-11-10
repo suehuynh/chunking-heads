@@ -1,0 +1,78 @@
+{
+  "present-past shuffle_input_seed42_allpos": {
+    "L4H12": [
+      "L3MLP",
+      "L0MLP",
+      "L3H11",
+      "L2MLP",
+      "L1MLP",
+      "L3H30",
+      "L1H26",
+      "L3H15",
+      "L1H27",
+      "L3H18"
+    ],
+    "L9H15": [
+      "L7MLP",
+      "L8MLP",
+      "L5MLP",
+      "L6MLP",
+      "L7H13",
+      "L3MLP",
+      "L8H9",
+      "L7H8",
+      "L4H13",
+      "L7H9"
+    ],
+    "L13H11": [
+      "L12MLP",
+      "L11MLP",
+      "L11H14",
+      "L11H5",
+      "L9H8",
+      "L12H13",
+      "L10MLP",
+      "L10H13",
+      "L9H16",
+      "L10H21"
+    ]
+  },
+  "present-past shuffle_output_seed42_allpos": {
+    "L4H12": [
+      "L3MLP",
+      "L2MLP",
+      "L1MLP",
+      "L2H7",
+      "L3H19",
+      "L2H29",
+      "L2H26",
+      "L3H30",
+      "L2H20",
+      "L2H19"
+    ],
+    "L9H15": [
+      "L8MLP",
+      "L7MLP",
+      "L6MLP",
+      "L7H13",
+      "L8H9",
+      "L6H6",
+      "L4H19",
+      "L7H9",
+      "L7H28",
+      "L8H17"
+    ],
+    "L13H11": [
+      "L12MLP",
+      "L11MLP",
+      "L9H8",
+      "L11H5",
+      "L11H14",
+      "L12H13",
+      "L9H16",
+      "L10H13",
+      "L10H21",
+      "L10MLP"
+    ]
+  }
+}
