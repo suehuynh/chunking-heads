@@ -40,9 +40,10 @@ import pandas as pd
 import torch
 from nnsight import LanguageModel
 
-from lth_corruption import _unwrap, build_condition
+from lth_corruption import FILLER_WORDS, _unwrap
+from route_utils import PromptMaker
+from shared_utils.prompt_utils import build_chunk_labeled_prompts
 from shared_utils.plot_utils import plot_rsa_matrix, plot_score_table
-from shared_utils.prompt_utils import build_chunk_labeled_prompts, filter_token_pairs_by_length
 from shared_utils.wrapper import ModelAccessor, get_accessor_config, get_model_specs
 
 torch.set_grad_enabled(False)
@@ -127,7 +128,11 @@ def main() -> None:
     parser.add_argument("--k", type=int, default=10)
     parser.add_argument("--batch_size", type=int, default=16)
     parser.add_argument("--save_root", type=str, default="output")
-    parser.add_argument("--dataset_folder", type=str, default="datasets/abstractive")
+    parser.add_argument("--input_len", type=int, default=1,
+        help="keep items whose input is exactly this many tokens (park-country: 5); role-only prompts then "
+             "replace each input with that many filler words so lengths stay equal")
+    parser.add_argument("--random_demos", action="store_true",
+        help="demos sampled with distinct outputs instead of the items before the query (park-country)")
     args = parser.parse_args()
 
     model_dir = os.path.join(args.save_root, args.model_name.split("/")[-1])
@@ -143,19 +148,21 @@ def main() -> None:
 
     model = LanguageModel(args.model_name, device_map="auto" if torch.cuda.is_available() else "cpu",
                           dispatch=True, dtype=torch.float32, attn_implementation="eager")
-    with open(os.path.join(args.dataset_folder, f"{args.d_name}.json"), encoding="utf-8") as f:
-        dataset = filter_token_pairs_by_length(json.load(f), model, input_len=1, output_len=1)
-    query_indices = sorted(random.Random(args.seed).sample(range(len(dataset)), min(args.n_prompts, len(dataset))))
+    # same prompts as lth_corruption.py / route tests (identical to before for single-token tasks)
+    pm = PromptMaker(model.tokenizer, args.d_name, args.n_prompts, args.seed, n_shot=args.n_shot,
+                     input_len=args.input_len, random_demos=args.random_demos)
 
     scores, roles, attn_clean = {}, None, None
     # random_both: same roles, every content word replaced; shuffled_pairs: real words, wrong partners
     for condition in ["clean", "random_both", "shuffled_pairs"]:
-        rng = random.Random(f"{args.seed}-{condition}")
-        prompts = []
-        for q in query_indices:
-            demos = [dataset[(q - args.n_shot + j) % len(dataset)] for j in range(args.n_shot)]
-            items, _ = build_condition(condition, demos, dataset[q], rng)
-            prompts.append(build_chunk_labeled_prompts(items, model.tokenizer, args.n_shot, [args.n_shot])[0])
+        if condition == "random_both" and args.input_len > 1:   # multi-token inputs -> as many filler words
+            rng, prompts = random.Random(f"{args.seed}-random_both-multi"), []
+            for q in pm.q_idx:
+                items = [{"input": " ".join(rng.sample(FILLER_WORDS, args.input_len)), "output": rng.choice(FILLER_WORDS)}
+                         for _ in range(args.n_shot)] + [pm.data[q]]
+                prompts.append(build_chunk_labeled_prompts(items, model.tokenizer, args.n_shot, [args.n_shot])[0])
+        else:
+            prompts, _ = pm.make(condition)
         assert len({len(p["input_ids"]) for p in prompts}) == 1, "prompts differ in length"
         roles = prompts[0]["roles"]
         attn = attention_all_layers(model, torch.tensor([p["input_ids"] for p in prompts]), args.batch_size)
