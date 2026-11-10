@@ -76,6 +76,9 @@ class PromptMaker:
         self.tok, self.seed, self.n_shot = tok, seed, n_shot
         with open(os.path.join("datasets", "abstractive", f"{task}.json"), encoding="utf-8") as f:
             self.data = filter_token_pairs_by_length(json.load(f), _Shim(tok), input_len=input_len, output_len=1)
+        if not self.data:
+            raise ValueError(f"{task}: no items with a {input_len}-token input and a 1-token output; "
+                             f"multi-token inputs need --input_len (park-country: --input_len 5 --random_demos)")
         rng = random.Random(seed)
         self.q_idx = sorted(rng.sample(range(len(self.data)), min(n_prompts, len(self.data))))
         self.demos = {}
