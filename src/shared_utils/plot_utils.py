@@ -171,10 +171,47 @@ def plot_stacked_counts(
     return fig
 
 
+def plot_grouped_bars(df: pd.DataFrame, x_col: str, y_col: str, group_col: str,
+                      title: str = "", y_title: str | None = None, error_col: str | None = None) -> go.Figure:
+    """One bar per (x, group), groups side by side, x in df order; optional error bars."""
+    groups = list(df[group_col].unique())
+    colors = distinct_colors(len(groups))
+    fig = go.Figure()
+    for color, group in zip(colors, groups):
+        g = df[df[group_col] == group]
+        fig.add_trace(go.Bar(
+            x=g[x_col], y=g[y_col], name=str(group), marker_color=color,
+            error_y=dict(type="data", array=g[error_col]) if error_col else None,
+        ))
+    fig.update_layout(barmode="group", title=title, yaxis_title=y_title or y_col, xaxis_title=x_col)
+    return fig
+
+
+def plot_score_table(df: pd.DataFrame, row_col: str, value_cols: list[str], title: str = "",
+                     text_cols: list[str] | None = None) -> go.Figure:
+    """Rows x scores heatmap with each cell's value printed; each column colored on its own 0-1 scale
+    (min-max per column), so differently scaled scores can sit side by side."""
+    values = df[value_cols].astype(float)
+    scaled = (values - values.min()) / (values.max() - values.min()).replace(0, 1)
+    labels = df[row_col].astype(str)
+    if text_cols:  # e.g. a class label shown next to the row name
+        labels = labels + "  " + df[text_cols].astype(str).agg(" ".join, axis=1)
+    fig = go.Figure(go.Heatmap(
+        z=scaled.values, x=value_cols, y=labels, colorscale="Blues", showscale=False,
+        text=values.round(2).values, texttemplate="%{text}",
+        hovertemplate="%{y}<br>%{x}: %{text}<extra></extra>",
+    ))
+    fig.update_yaxes(autorange="reversed")
+    fig.update_layout(title=title, height=max(400, 28 * len(df) + 150), width=250 + 110 * len(value_cols))
+    return fig
+
+
 def plot_rsa_matrix(sim: torch.Tensor, labels: list[str], title: str,
                     zmin: float = -1.0, zmax: float = 1.0,
-                    position_hover: list[str] | None = None) -> go.Figure:
-    """Position x position similarity heatmap; labels must be unique (e.g. f"{i}_{role}_{token}").
+                    position_hover: list[str] | None = None,
+                    value_name: str = "cosine similarity") -> go.Figure:
+    """Position x position heatmap (similarity by default; set value_name, e.g. "attention weight");
+    labels must be unique (e.g. f"{i}_{role}_{token}").
     position_hover: optional extra text per position (e.g. that position's token in every prompt)."""
     hover = None
     if position_hover is not None:
@@ -182,9 +219,9 @@ def plot_rsa_matrix(sim: torch.Tensor, labels: list[str], title: str,
                  for r in range(len(labels))]
     fig = go.Figure(go.Heatmap(
         z=sim.detach().cpu().numpy(), x=labels, y=labels,
-        colorscale="Viridis", zmin=zmin, zmax=zmax, colorbar=dict(title="cosine<br>similarity"),
+        colorscale="Viridis", zmin=zmin, zmax=zmax, colorbar=dict(title=value_name.replace(" ", "<br>", 1)),
         text=hover,
-        hovertemplate="%{y}  x  %{x}<br>similarity: %{z:.3f}" + ("<br>%{text}" if hover else "") + "<extra></extra>",
+        hovertemplate="%{y}  x  %{x}<br>" + value_name + ": %{z:.3f}" + ("<br>%{text}" if hover else "") + "<extra></extra>",
     ))
     fig.update_xaxes(tickmode="linear", dtick=1, tickangle=90)
     fig.update_yaxes(tickmode="linear", dtick=1, autorange="reversed")
