@@ -1,0 +1,91 @@
+corruption,sender,sender_layer,antonym,country-capital,park-country,present-past,synonym,n_tasks_shared,shared_in
+shuffle_input,L7H5,7,1,1,0,0,1,3,antonym country-capital synonym
+shuffle_input,L5MLP,5,1,0,0,0,1,2,antonym synonym
+shuffle_input,L6H4,6,0,1,0,0,1,2,country-capital synonym
+shuffle_input,L6MLP,6,0,1,1,0,0,2,country-capital park-country
+shuffle_input,L7H28,7,1,0,0,0,1,2,antonym synonym
+shuffle_input,L8MLP,8,1,0,0,0,1,2,antonym synonym
+shuffle_input,L1H12,1,0,0,1,0,0,1,park-country
+shuffle_input,L1H19,1,0,0,1,0,0,1,park-country
+shuffle_input,L1H2,1,1,0,0,0,0,1,antonym
+shuffle_input,L1H20,1,0,0,0,0,1,1,synonym
+shuffle_input,L1H26,1,0,0,1,0,0,1,park-country
+shuffle_input,L1H29,1,0,1,0,0,0,1,country-capital
+shuffle_input,L2H1,2,0,1,0,0,0,1,country-capital
+shuffle_input,L2H17,2,0,1,0,0,0,1,country-capital
+shuffle_input,L2H23,2,0,1,0,0,0,1,country-capital
+shuffle_input,L2H25,2,0,0,1,0,0,1,park-country
+shuffle_input,L2H27,2,0,1,0,0,0,1,country-capital
+shuffle_input,L3H14,3,0,1,0,0,0,1,country-capital
+shuffle_input,L3H3,3,0,1,0,0,0,1,country-capital
+shuffle_input,L3MLP,3,0,0,0,1,0,1,present-past
+shuffle_input,L4H10,4,0,1,0,0,0,1,country-capital
+shuffle_input,L4H14,4,0,1,0,0,0,1,country-capital
+shuffle_input,L4MLP,4,0,1,0,0,0,1,country-capital
+shuffle_input,L5H27,5,0,0,1,0,0,1,park-country
+shuffle_input,L5H6,5,0,1,0,0,0,1,country-capital
+shuffle_input,L6H14,6,1,0,0,0,0,1,antonym
+shuffle_input,L6H17,6,0,1,0,0,0,1,country-capital
+shuffle_input,L6H18,6,0,1,0,0,0,1,country-capital
+shuffle_input,L6H29,6,0,0,1,0,0,1,park-country
+shuffle_input,L6H6,6,0,0,0,0,1,1,synonym
+shuffle_input,L7H2,7,0,0,0,0,1,1,synonym
+shuffle_input,L7H20,7,1,0,0,0,0,1,antonym
+shuffle_input,L7H30,7,0,0,0,0,1,1,synonym
+shuffle_input,L7H6,7,1,0,0,0,0,1,antonym
+shuffle_input,L7H8,7,0,0,0,0,1,1,synonym
+shuffle_input,L7H9,7,0,0,0,0,1,1,synonym
+shuffle_input,L8H17,8,0,0,1,0,0,1,park-country
+shuffle_input,L8H23,8,1,0,0,0,0,1,antonym
+shuffle_input,L8H27,8,1,0,0,0,0,1,antonym
+shuffle_input,L8H29,8,1,0,0,0,0,1,antonym
+shuffle_input,L8H31,8,1,0,0,0,0,1,antonym
+shuffle_output,L7H5,7,1,1,1,0,1,4,antonym country-capital park-country synonym
+shuffle_output,L5MLP,5,1,1,0,0,1,3,antonym country-capital synonym
+shuffle_output,L7H28,7,1,0,1,0,1,3,antonym park-country synonym
+shuffle_output,L4MLP,4,0,1,0,0,1,2,country-capital synonym
+shuffle_output,L8MLP,8,1,0,0,0,1,2,antonym synonym
+shuffle_output,L0H0,0,0,1,0,0,0,1,country-capital
+shuffle_output,L0H10,0,0,1,0,0,0,1,country-capital
+shuffle_output,L0H18,0,0,1,0,0,0,1,country-capital
+shuffle_output,L0H19,0,0,1,0,0,0,1,country-capital
+shuffle_output,L0H21,0,0,0,1,0,0,1,park-country
+shuffle_output,L0H25,0,0,1,0,0,0,1,country-capital
+shuffle_output,L0H6,0,0,1,0,0,0,1,country-capital
+shuffle_output,L0H8,0,0,1,0,0,0,1,country-capital
+shuffle_output,L0MLP,0,0,1,0,0,0,1,country-capital
+shuffle_output,L1H1,1,0,1,0,0,0,1,country-capital
+shuffle_output,L1H15,1,0,1,0,0,0,1,country-capital
+shuffle_output,L1H18,1,0,1,0,0,0,1,country-capital
+shuffle_output,L1H20,1,0,1,0,0,0,1,country-capital
+shuffle_output,L1H22,1,0,0,1,0,0,1,park-country
+shuffle_output,L1H26,1,0,1,0,0,0,1,country-capital
+shuffle_output,L1H28,1,0,1,0,0,0,1,country-capital
+shuffle_output,L1H31,1,0,1,0,0,0,1,country-capital
+shuffle_output,L1H5,1,0,1,0,0,0,1,country-capital
+shuffle_output,L1H6,1,0,1,0,0,0,1,country-capital
+shuffle_output,L1H7,1,0,1,0,0,0,1,country-capital
+shuffle_output,L1H9,1,0,1,0,0,0,1,country-capital
+shuffle_output,L2H12,2,0,0,1,0,0,1,park-country
+shuffle_output,L2MLP,2,1,0,0,0,0,1,antonym
+shuffle_output,L3H7,3,0,0,1,0,0,1,park-country
+shuffle_output,L3MLP,3,0,0,1,0,0,1,park-country
+shuffle_output,L4H9,4,1,0,0,0,0,1,antonym
+shuffle_output,L5H10,5,0,0,1,0,0,1,park-country
+shuffle_output,L5H6,5,1,0,0,0,0,1,antonym
+shuffle_output,L6H14,6,1,0,0,0,0,1,antonym
+shuffle_output,L6H17,6,0,1,0,0,0,1,country-capital
+shuffle_output,L6H4,6,0,0,0,0,1,1,synonym
+shuffle_output,L6H6,6,0,0,0,0,1,1,synonym
+shuffle_output,L6MLP,6,0,1,0,0,0,1,country-capital
+shuffle_output,L7H2,7,0,0,0,0,1,1,synonym
+shuffle_output,L7H21,7,1,0,0,0,0,1,antonym
+shuffle_output,L7H24,7,0,1,0,0,0,1,country-capital
+shuffle_output,L7H26,7,0,1,0,0,0,1,country-capital
+shuffle_output,L7H30,7,0,0,0,0,1,1,synonym
+shuffle_output,L7H8,7,0,0,0,0,1,1,synonym
+shuffle_output,L7H9,7,0,0,0,0,1,1,synonym
+shuffle_output,L8H23,8,1,0,0,0,0,1,antonym
+shuffle_output,L8H29,8,1,0,0,0,0,1,antonym
+shuffle_output,L8H31,8,1,0,0,0,0,1,antonym
+shuffle_output,L10H20,10,0,0,1,0,0,1,park-country

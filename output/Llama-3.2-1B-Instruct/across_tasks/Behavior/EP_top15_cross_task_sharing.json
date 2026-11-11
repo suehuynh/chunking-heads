@@ -10,6 +10,25 @@
         "prev_item"
       ]
     },
+    "L7H5": {
+      "n_tasks_shared": 5,
+      "shared_in": [
+        "antonym",
+        "country-capital",
+        "next_item",
+        "prev_item",
+        "synonym"
+      ]
+    },
+    "L5MLP": {
+      "n_tasks_shared": 4,
+      "shared_in": [
+        "antonym",
+        "country-capital",
+        "prev_item",
+        "synonym"
+      ]
+    },
     "L6MLP": {
       "n_tasks_shared": 4,
       "shared_in": [
@@ -19,13 +38,13 @@
         "prev_item"
       ]
     },
-    "L7H5": {
+    "L8MLP": {
       "n_tasks_shared": 4,
       "shared_in": [
         "antonym",
-        "country-capital",
         "next_item",
-        "prev_item"
+        "prev_item",
+        "synonym"
       ]
     },
     "L2MLP": {
@@ -44,20 +63,36 @@
         "prev_item"
       ]
     },
-    "L5MLP": {
+    "L6H6": {
+      "n_tasks_shared": 3,
+      "shared_in": [
+        "country-capital",
+        "next_item",
+        "synonym"
+      ]
+    },
+    "L7H28": {
       "n_tasks_shared": 3,
       "shared_in": [
         "antonym",
-        "country-capital",
-        "prev_item"
+        "prev_item",
+        "synonym"
       ]
     },
-    "L8MLP": {
+    "L7H30": {
       "n_tasks_shared": 3,
       "shared_in": [
         "antonym",
         "next_item",
-        "prev_item"
+        "synonym"
+      ]
+    },
+    "L8H29": {
+      "n_tasks_shared": 3,
+      "shared_in": [
+        "antonym",
+        "next_item",
+        "synonym"
       ]
     },
     "L1H26": {
@@ -81,6 +116,13 @@
         "park-country"
       ]
     },
+    "L5H4": {
+      "n_tasks_shared": 2,
+      "shared_in": [
+        "country-capital",
+        "synonym"
+      ]
+    },
     "L5H6": {
       "n_tasks_shared": 2,
       "shared_in": [
@@ -95,25 +137,25 @@
         "park-country"
       ]
     },
-    "L6H6": {
+    "L6H4": {
       "n_tasks_shared": 2,
       "shared_in": [
         "country-capital",
-        "next_item"
+        "synonym"
       ]
     },
-    "L7H28": {
+    "L7H6": {
       "n_tasks_shared": 2,
       "shared_in": [
         "antonym",
-        "prev_item"
+        "synonym"
       ]
     },
-    "L7H30": {
+    "L7H9": {
       "n_tasks_shared": 2,
       "shared_in": [
         "antonym",
-        "next_item"
+        "synonym"
       ]
     },
     "L7MLP": {
@@ -121,13 +163,6 @@
       "shared_in": [
         "next_item",
         "prev_item"
-      ]
-    },
-    "L8H29": {
-      "n_tasks_shared": 2,
-      "shared_in": [
-        "antonym",
-        "next_item"
       ]
     },
     "L8H31": {
@@ -250,6 +285,12 @@
         "antonym"
       ]
     },
+    "L1H20": {
+      "n_tasks_shared": 1,
+      "shared_in": [
+        "synonym"
+      ]
+    },
     "L1H21": {
       "n_tasks_shared": 1,
       "shared_in": [
@@ -328,6 +369,12 @@
         "park-country"
       ]
     },
+    "L3H24": {
+      "n_tasks_shared": 1,
+      "shared_in": [
+        "synonym"
+      ]
+    },
     "L3H25": {
       "n_tasks_shared": 1,
       "shared_in": [
@@ -358,6 +405,12 @@
         "country-capital"
       ]
     },
+    "L4H2": {
+      "n_tasks_shared": 1,
+      "shared_in": [
+        "synonym"
+      ]
+    },
     "L4H29": {
       "n_tasks_shared": 1,
       "shared_in": [
@@ -368,12 +421,6 @@
       "n_tasks_shared": 1,
       "shared_in": [
         "park-country"
-      ]
-    },
-    "L5H4": {
-      "n_tasks_shared": 1,
-      "shared_in": [
-        "country-capital"
       ]
     },
     "L6H14": {
@@ -406,22 +453,28 @@
         "park-country"
       ]
     },
-    "L6H4": {
-      "n_tasks_shared": 1,
-      "shared_in": [
-        "country-capital"
-      ]
-    },
     "L6H8": {
       "n_tasks_shared": 1,
       "shared_in": [
         "next_item"
       ]
     },
+    "L7H0": {
+      "n_tasks_shared": 1,
+      "shared_in": [
+        "synonym"
+      ]
+    },
     "L7H15": {
       "n_tasks_shared": 1,
       "shared_in": [
         "country-capital"
+      ]
+    },
+    "L7H2": {
+      "n_tasks_shared": 1,
+      "shared_in": [
+        "synonym"
       ]
     },
     "L7H20": {
@@ -448,22 +501,16 @@
         "next_item"
       ]
     },
-    "L7H6": {
-      "n_tasks_shared": 1,
-      "shared_in": [
-        "antonym"
-      ]
-    },
     "L7H7": {
       "n_tasks_shared": 1,
       "shared_in": [
         "next_item"
       ]
     },
-    "L7H9": {
+    "L7H8": {
       "n_tasks_shared": 1,
       "shared_in": [
-        "antonym"
+        "synonym"
       ]
     },
     "L8H12": {
@@ -482,6 +529,12 @@
       "n_tasks_shared": 1,
       "shared_in": [
         "park-country"
+      ]
+    },
+    "L8H19": {
+      "n_tasks_shared": 1,
+      "shared_in": [
+        "synonym"
       ]
     },
     "L8H23": {
@@ -613,31 +666,52 @@
   },
   "shuffle_output": {
     "L7H5": {
+      "n_tasks_shared": 6,
+      "shared_in": [
+        "antonym",
+        "country-capital",
+        "next_item",
+        "park-country",
+        "prev_item",
+        "synonym"
+      ]
+    },
+    "L5MLP": {
       "n_tasks_shared": 5,
       "shared_in": [
         "antonym",
         "country-capital",
         "next_item",
-        "park-country",
-        "prev_item"
-      ]
-    },
-    "L5MLP": {
-      "n_tasks_shared": 4,
-      "shared_in": [
-        "antonym",
-        "country-capital",
-        "next_item",
-        "prev_item"
+        "prev_item",
+        "synonym"
       ]
     },
     "L7H28": {
-      "n_tasks_shared": 4,
+      "n_tasks_shared": 5,
       "shared_in": [
         "antonym",
         "next_item",
         "park-country",
-        "prev_item"
+        "prev_item",
+        "synonym"
+      ]
+    },
+    "L3MLP": {
+      "n_tasks_shared": 4,
+      "shared_in": [
+        "next_item",
+        "park-country",
+        "prev_item",
+        "synonym"
+      ]
+    },
+    "L8MLP": {
+      "n_tasks_shared": 4,
+      "shared_in": [
+        "antonym",
+        "next_item",
+        "prev_item",
+        "synonym"
       ]
     },
     "L0MLP": {
@@ -656,20 +730,36 @@
         "prev_item"
       ]
     },
-    "L3MLP": {
+    "L4MLP": {
+      "n_tasks_shared": 3,
+      "shared_in": [
+        "country-capital",
+        "prev_item",
+        "synonym"
+      ]
+    },
+    "L6H6": {
       "n_tasks_shared": 3,
       "shared_in": [
         "next_item",
         "park-country",
-        "prev_item"
+        "synonym"
       ]
     },
-    "L8MLP": {
+    "L7H8": {
+      "n_tasks_shared": 3,
+      "shared_in": [
+        "antonym",
+        "prev_item",
+        "synonym"
+      ]
+    },
+    "L8H29": {
       "n_tasks_shared": 3,
       "shared_in": [
         "antonym",
         "next_item",
-        "prev_item"
+        "synonym"
       ]
     },
     "L10H20": {
@@ -708,20 +798,6 @@
         "park-country"
       ]
     },
-    "L4MLP": {
-      "n_tasks_shared": 2,
-      "shared_in": [
-        "country-capital",
-        "prev_item"
-      ]
-    },
-    "L6H6": {
-      "n_tasks_shared": 2,
-      "shared_in": [
-        "next_item",
-        "park-country"
-      ]
-    },
     "L6MLP": {
       "n_tasks_shared": 2,
       "shared_in": [
@@ -736,11 +812,11 @@
         "country-capital"
       ]
     },
-    "L7H8": {
+    "L7H9": {
       "n_tasks_shared": 2,
       "shared_in": [
         "antonym",
-        "prev_item"
+        "synonym"
       ]
     },
     "L7MLP": {
@@ -748,13 +824,6 @@
       "shared_in": [
         "next_item",
         "prev_item"
-      ]
-    },
-    "L8H29": {
-      "n_tasks_shared": 2,
-      "shared_in": [
-        "antonym",
-        "next_item"
       ]
     },
     "L8H31": {
@@ -1038,10 +1107,22 @@
         "park-country"
       ]
     },
+    "L4H2": {
+      "n_tasks_shared": 1,
+      "shared_in": [
+        "synonym"
+      ]
+    },
     "L4H23": {
       "n_tasks_shared": 1,
       "shared_in": [
         "country-capital"
+      ]
+    },
+    "L4H5": {
+      "n_tasks_shared": 1,
+      "shared_in": [
+        "synonym"
       ]
     },
     "L4H9": {
@@ -1054,6 +1135,12 @@
       "n_tasks_shared": 1,
       "shared_in": [
         "park-country"
+      ]
+    },
+    "L5H4": {
+      "n_tasks_shared": 1,
+      "shared_in": [
+        "synonym"
       ]
     },
     "L5H6": {
@@ -1074,6 +1161,12 @@
         "country-capital"
       ]
     },
+    "L6H4": {
+      "n_tasks_shared": 1,
+      "shared_in": [
+        "synonym"
+      ]
+    },
     "L6H5": {
       "n_tasks_shared": 1,
       "shared_in": [
@@ -1084,6 +1177,18 @@
       "n_tasks_shared": 1,
       "shared_in": [
         "next_item"
+      ]
+    },
+    "L7H0": {
+      "n_tasks_shared": 1,
+      "shared_in": [
+        "synonym"
+      ]
+    },
+    "L7H2": {
+      "n_tasks_shared": 1,
+      "shared_in": [
+        "synonym"
       ]
     },
     "L7H21": {
@@ -1104,16 +1209,22 @@
         "country-capital"
       ]
     },
+    "L7H30": {
+      "n_tasks_shared": 1,
+      "shared_in": [
+        "synonym"
+      ]
+    },
+    "L7H6": {
+      "n_tasks_shared": 1,
+      "shared_in": [
+        "synonym"
+      ]
+    },
     "L7H7": {
       "n_tasks_shared": 1,
       "shared_in": [
         "next_item"
-      ]
-    },
-    "L7H9": {
-      "n_tasks_shared": 1,
-      "shared_in": [
-        "antonym"
       ]
     },
     "L8H21": {

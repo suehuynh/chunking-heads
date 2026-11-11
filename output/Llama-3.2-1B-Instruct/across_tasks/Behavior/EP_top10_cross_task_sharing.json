@@ -1,0 +1,562 @@
+{
+  "shuffle_input": {
+    "L7H5": {
+      "n_tasks_shared": 3,
+      "shared_in": [
+        "antonym",
+        "country-capital",
+        "synonym"
+      ]
+    },
+    "L5MLP": {
+      "n_tasks_shared": 2,
+      "shared_in": [
+        "antonym",
+        "synonym"
+      ]
+    },
+    "L6H4": {
+      "n_tasks_shared": 2,
+      "shared_in": [
+        "country-capital",
+        "synonym"
+      ]
+    },
+    "L6MLP": {
+      "n_tasks_shared": 2,
+      "shared_in": [
+        "country-capital",
+        "park-country"
+      ]
+    },
+    "L7H28": {
+      "n_tasks_shared": 2,
+      "shared_in": [
+        "antonym",
+        "synonym"
+      ]
+    },
+    "L8MLP": {
+      "n_tasks_shared": 2,
+      "shared_in": [
+        "antonym",
+        "synonym"
+      ]
+    },
+    "L1H12": {
+      "n_tasks_shared": 1,
+      "shared_in": [
+        "park-country"
+      ]
+    },
+    "L1H19": {
+      "n_tasks_shared": 1,
+      "shared_in": [
+        "park-country"
+      ]
+    },
+    "L1H2": {
+      "n_tasks_shared": 1,
+      "shared_in": [
+        "antonym"
+      ]
+    },
+    "L1H20": {
+      "n_tasks_shared": 1,
+      "shared_in": [
+        "synonym"
+      ]
+    },
+    "L1H26": {
+      "n_tasks_shared": 1,
+      "shared_in": [
+        "park-country"
+      ]
+    },
+    "L1H29": {
+      "n_tasks_shared": 1,
+      "shared_in": [
+        "country-capital"
+      ]
+    },
+    "L2H1": {
+      "n_tasks_shared": 1,
+      "shared_in": [
+        "country-capital"
+      ]
+    },
+    "L2H17": {
+      "n_tasks_shared": 1,
+      "shared_in": [
+        "country-capital"
+      ]
+    },
+    "L2H23": {
+      "n_tasks_shared": 1,
+      "shared_in": [
+        "country-capital"
+      ]
+    },
+    "L2H25": {
+      "n_tasks_shared": 1,
+      "shared_in": [
+        "park-country"
+      ]
+    },
+    "L2H27": {
+      "n_tasks_shared": 1,
+      "shared_in": [
+        "country-capital"
+      ]
+    },
+    "L3H14": {
+      "n_tasks_shared": 1,
+      "shared_in": [
+        "country-capital"
+      ]
+    },
+    "L3H3": {
+      "n_tasks_shared": 1,
+      "shared_in": [
+        "country-capital"
+      ]
+    },
+    "L3MLP": {
+      "n_tasks_shared": 1,
+      "shared_in": [
+        "present-past"
+      ]
+    },
+    "L4H10": {
+      "n_tasks_shared": 1,
+      "shared_in": [
+        "country-capital"
+      ]
+    },
+    "L4H14": {
+      "n_tasks_shared": 1,
+      "shared_in": [
+        "country-capital"
+      ]
+    },
+    "L4MLP": {
+      "n_tasks_shared": 1,
+      "shared_in": [
+        "country-capital"
+      ]
+    },
+    "L5H27": {
+      "n_tasks_shared": 1,
+      "shared_in": [
+        "park-country"
+      ]
+    },
+    "L5H6": {
+      "n_tasks_shared": 1,
+      "shared_in": [
+        "country-capital"
+      ]
+    },
+    "L6H14": {
+      "n_tasks_shared": 1,
+      "shared_in": [
+        "antonym"
+      ]
+    },
+    "L6H17": {
+      "n_tasks_shared": 1,
+      "shared_in": [
+        "country-capital"
+      ]
+    },
+    "L6H18": {
+      "n_tasks_shared": 1,
+      "shared_in": [
+        "country-capital"
+      ]
+    },
+    "L6H29": {
+      "n_tasks_shared": 1,
+      "shared_in": [
+        "park-country"
+      ]
+    },
+    "L6H6": {
+      "n_tasks_shared": 1,
+      "shared_in": [
+        "synonym"
+      ]
+    },
+    "L7H2": {
+      "n_tasks_shared": 1,
+      "shared_in": [
+        "synonym"
+      ]
+    },
+    "L7H20": {
+      "n_tasks_shared": 1,
+      "shared_in": [
+        "antonym"
+      ]
+    },
+    "L7H30": {
+      "n_tasks_shared": 1,
+      "shared_in": [
+        "synonym"
+      ]
+    },
+    "L7H6": {
+      "n_tasks_shared": 1,
+      "shared_in": [
+        "antonym"
+      ]
+    },
+    "L7H8": {
+      "n_tasks_shared": 1,
+      "shared_in": [
+        "synonym"
+      ]
+    },
+    "L7H9": {
+      "n_tasks_shared": 1,
+      "shared_in": [
+        "synonym"
+      ]
+    },
+    "L8H17": {
+      "n_tasks_shared": 1,
+      "shared_in": [
+        "park-country"
+      ]
+    },
+    "L8H23": {
+      "n_tasks_shared": 1,
+      "shared_in": [
+        "antonym"
+      ]
+    },
+    "L8H27": {
+      "n_tasks_shared": 1,
+      "shared_in": [
+        "antonym"
+      ]
+    },
+    "L8H29": {
+      "n_tasks_shared": 1,
+      "shared_in": [
+        "antonym"
+      ]
+    },
+    "L8H31": {
+      "n_tasks_shared": 1,
+      "shared_in": [
+        "antonym"
+      ]
+    }
+  },
+  "shuffle_output": {
+    "L7H5": {
+      "n_tasks_shared": 4,
+      "shared_in": [
+        "antonym",
+        "country-capital",
+        "park-country",
+        "synonym"
+      ]
+    },
+    "L5MLP": {
+      "n_tasks_shared": 3,
+      "shared_in": [
+        "antonym",
+        "country-capital",
+        "synonym"
+      ]
+    },
+    "L7H28": {
+      "n_tasks_shared": 3,
+      "shared_in": [
+        "antonym",
+        "park-country",
+        "synonym"
+      ]
+    },
+    "L4MLP": {
+      "n_tasks_shared": 2,
+      "shared_in": [
+        "country-capital",
+        "synonym"
+      ]
+    },
+    "L8MLP": {
+      "n_tasks_shared": 2,
+      "shared_in": [
+        "antonym",
+        "synonym"
+      ]
+    },
+    "L0H0": {
+      "n_tasks_shared": 1,
+      "shared_in": [
+        "country-capital"
+      ]
+    },
+    "L0H10": {
+      "n_tasks_shared": 1,
+      "shared_in": [
+        "country-capital"
+      ]
+    },
+    "L0H18": {
+      "n_tasks_shared": 1,
+      "shared_in": [
+        "country-capital"
+      ]
+    },
+    "L0H19": {
+      "n_tasks_shared": 1,
+      "shared_in": [
+        "country-capital"
+      ]
+    },
+    "L0H21": {
+      "n_tasks_shared": 1,
+      "shared_in": [
+        "park-country"
+      ]
+    },
+    "L0H25": {
+      "n_tasks_shared": 1,
+      "shared_in": [
+        "country-capital"
+      ]
+    },
+    "L0H6": {
+      "n_tasks_shared": 1,
+      "shared_in": [
+        "country-capital"
+      ]
+    },
+    "L0H8": {
+      "n_tasks_shared": 1,
+      "shared_in": [
+        "country-capital"
+      ]
+    },
+    "L0MLP": {
+      "n_tasks_shared": 1,
+      "shared_in": [
+        "country-capital"
+      ]
+    },
+    "L1H1": {
+      "n_tasks_shared": 1,
+      "shared_in": [
+        "country-capital"
+      ]
+    },
+    "L1H15": {
+      "n_tasks_shared": 1,
+      "shared_in": [
+        "country-capital"
+      ]
+    },
+    "L1H18": {
+      "n_tasks_shared": 1,
+      "shared_in": [
+        "country-capital"
+      ]
+    },
+    "L1H20": {
+      "n_tasks_shared": 1,
+      "shared_in": [
+        "country-capital"
+      ]
+    },
+    "L1H22": {
+      "n_tasks_shared": 1,
+      "shared_in": [
+        "park-country"
+      ]
+    },
+    "L1H26": {
+      "n_tasks_shared": 1,
+      "shared_in": [
+        "country-capital"
+      ]
+    },
+    "L1H28": {
+      "n_tasks_shared": 1,
+      "shared_in": [
+        "country-capital"
+      ]
+    },
+    "L1H31": {
+      "n_tasks_shared": 1,
+      "shared_in": [
+        "country-capital"
+      ]
+    },
+    "L1H5": {
+      "n_tasks_shared": 1,
+      "shared_in": [
+        "country-capital"
+      ]
+    },
+    "L1H6": {
+      "n_tasks_shared": 1,
+      "shared_in": [
+        "country-capital"
+      ]
+    },
+    "L1H7": {
+      "n_tasks_shared": 1,
+      "shared_in": [
+        "country-capital"
+      ]
+    },
+    "L1H9": {
+      "n_tasks_shared": 1,
+      "shared_in": [
+        "country-capital"
+      ]
+    },
+    "L2H12": {
+      "n_tasks_shared": 1,
+      "shared_in": [
+        "park-country"
+      ]
+    },
+    "L2MLP": {
+      "n_tasks_shared": 1,
+      "shared_in": [
+        "antonym"
+      ]
+    },
+    "L3H7": {
+      "n_tasks_shared": 1,
+      "shared_in": [
+        "park-country"
+      ]
+    },
+    "L3MLP": {
+      "n_tasks_shared": 1,
+      "shared_in": [
+        "park-country"
+      ]
+    },
+    "L4H9": {
+      "n_tasks_shared": 1,
+      "shared_in": [
+        "antonym"
+      ]
+    },
+    "L5H10": {
+      "n_tasks_shared": 1,
+      "shared_in": [
+        "park-country"
+      ]
+    },
+    "L5H6": {
+      "n_tasks_shared": 1,
+      "shared_in": [
+        "antonym"
+      ]
+    },
+    "L6H14": {
+      "n_tasks_shared": 1,
+      "shared_in": [
+        "antonym"
+      ]
+    },
+    "L6H17": {
+      "n_tasks_shared": 1,
+      "shared_in": [
+        "country-capital"
+      ]
+    },
+    "L6H4": {
+      "n_tasks_shared": 1,
+      "shared_in": [
+        "synonym"
+      ]
+    },
+    "L6H6": {
+      "n_tasks_shared": 1,
+      "shared_in": [
+        "synonym"
+      ]
+    },
+    "L6MLP": {
+      "n_tasks_shared": 1,
+      "shared_in": [
+        "country-capital"
+      ]
+    },
+    "L7H2": {
+      "n_tasks_shared": 1,
+      "shared_in": [
+        "synonym"
+      ]
+    },
+    "L7H21": {
+      "n_tasks_shared": 1,
+      "shared_in": [
+        "antonym"
+      ]
+    },
+    "L7H24": {
+      "n_tasks_shared": 1,
+      "shared_in": [
+        "country-capital"
+      ]
+    },
+    "L7H26": {
+      "n_tasks_shared": 1,
+      "shared_in": [
+        "country-capital"
+      ]
+    },
+    "L7H30": {
+      "n_tasks_shared": 1,
+      "shared_in": [
+        "synonym"
+      ]
+    },
+    "L7H8": {
+      "n_tasks_shared": 1,
+      "shared_in": [
+        "synonym"
+      ]
+    },
+    "L7H9": {
+      "n_tasks_shared": 1,
+      "shared_in": [
+        "synonym"
+      ]
+    },
+    "L8H23": {
+      "n_tasks_shared": 1,
+      "shared_in": [
+        "antonym"
+      ]
+    },
+    "L8H29": {
+      "n_tasks_shared": 1,
+      "shared_in": [
+        "antonym"
+      ]
+    },
+    "L8H31": {
+      "n_tasks_shared": 1,
+      "shared_in": [
+        "antonym"
+      ]
+    },
+    "L10H20": {
+      "n_tasks_shared": 1,
+      "shared_in": [
+        "park-country"
+      ]
+    }
+  }
+}
