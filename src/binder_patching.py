@@ -64,7 +64,9 @@ def main() -> None:
         mdir, args.d_name, "Heads", "MAPS_nnsight", f"shared_{args.d_name}_heads_p0.1_k10.json")))]
     RL, RH = (int(x) for x in args.relation_head.split(","))
     rname = f"L{RL}H{RH}"
-    assert (RL, RH) in lth, f"{rname} is not an LTH of {args.d_name}: {lth}"
+    if (RL, RH) not in lth:   # e.g. another task's relation head read on this task's prompts
+        print(f"note: {rname} is not an LTH of {args.d_name}; reading it as well")
+        lth = lth + [(RL, RH)]
     BINDERS = {"binders": ANTONYM_BINDERS} if args.d_name == "antonym" else {}
     labels = pd.read_csv(os.path.join(mdir, args.d_name, "sender_classification", "all_heads.csv"))
     # all pair-binding heads (content or symbolic) below the relation LTH's layer
