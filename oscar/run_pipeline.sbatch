@@ -17,6 +17,7 @@
 #
 # Args: TASK [POSITIONS=last] [CORRUPTION=shuffle_input] [INPUT_LENGTH=1]
 # Skip finished steps with START_AT, e.g.:  START_AT=4 sbatch oscar/run_pipeline.sbatch antonym
+# Stop early with STOP_AFTER, e.g.:        STOP_AFTER=3 sbatch -J heads_synonym oscar/run_pipeline.sbatch synonym
 # One-off receivers instead of the shared-LTH list (space-separated LAYER,HEAD):
 # RECEIVERS="7,5" START_AT=4 sbatch -J pp_antonym_L7H5 oscar/run_pipeline.sbatch antonym all shuffle_input
 # Instruction prompts (IP; last position only; corruptions random_query | relation | zs | minimal):
@@ -31,6 +32,7 @@ POSITIONS="${2:-last}"          # last | all
 CORRUPTION="${3:-shuffle_input}" # EP: zs | shuffle_input | shuffle_output; IP: random_query | relation | zs | minimal
 INPUT_LENGTH="${4:-1}"           # used only with POSITIONS=all (e.g. 5 for park-country)
 START_AT="${START_AT:-1}"
+STOP_AFTER="${STOP_AFTER:-6}"   # last step to run, e.g. STOP_AFTER=3 = behavior + head identification only
 RECEIVER_ARGS=()
 if [[ -n "${RECEIVERS:-}" ]]; then RECEIVER_ARGS=(--receivers $RECEIVERS); fi
 CORRUPT_TASK="${CORRUPT_TASK:-}"  # IP relation corruption: the task whose instruction replaces the clean one
@@ -54,9 +56,9 @@ MODEL_SHORT="${MODEL##*/}"
 COMMON=(--model_name "$MODEL" --d_name "$TASK" --prompt_type "$PROMPT_TYPE"
         --save_root output --project_root "$REPO_ROOT" --dataset_folder datasets/abstractive)
 
-echo "=== $TASK $PROMPT_TYPE | positions=$POSITIONS corruption=$CORRUPTION${CORRUPT_TASK:+ ($CORRUPT_TASK)} input_length=$INPUT_LENGTH | start at step $START_AT ==="
+echo "=== $TASK $PROMPT_TYPE | positions=$POSITIONS corruption=$CORRUPTION${CORRUPT_TASK:+ ($CORRUPT_TASK)} input_length=$INPUT_LENGTH | steps $START_AT-$STOP_AFTER ==="
 
-if (( START_AT <= 1 )); then
+if (( START_AT <= 1 && 1 <= STOP_AFTER )); then
     echo "=== [1/6] behavior_variance ==="
     # every task shares one behavior JSON (read-modify-write)
     mkdir -p "output/$MODEL_SHORT/across_tasks/Behavior"
@@ -64,7 +66,7 @@ if (( START_AT <= 1 )); then
         python src/behavior_variance.py "${COMMON[@]}" --batch_size 20
 fi
 
-if (( START_AT <= 2 )); then
+if (( START_AT <= 2 && 2 <= STOP_AFTER )); then
     echo "=== [2/6] identify_heads_nn ==="
     # original identification: first --exp_size correct prompts (script default, 100) per template
     # (EP: shot counts 5/10/20/30; IP: instruction templates 0-4)
@@ -72,13 +74,13 @@ if (( START_AT <= 2 )); then
         --k "$K" --batch_size 20
 fi
 
-if (( START_AT <= 3 )); then
+if (( START_AT <= 3 && 3 <= STOP_AFTER )); then
     echo "=== [3/6] shared_heads_nn ==="
     python src/shared_heads_nn.py "${COMMON[@]}" --component_type lexical_task \
         --k "$K" --threshold "$THRESHOLD"
 fi
 
-if (( START_AT <= 4 )); then
+if (( START_AT <= 4 && 4 <= STOP_AFTER )); then
     echo "=== [4/6] path_patching ==="
     python src/shared_utils/path_patching.py "${COMMON[@]}" --component_type lexical_task \
         --k "$K" --threshold "$THRESHOLD" --corruption_type "$CORRUPTION" \
@@ -86,7 +88,7 @@ if (( START_AT <= 4 )); then
         --exp_size "$EXP_SIZE" --seed "$SEED" --batch_size "$BATCH_SIZE" "${RECEIVER_ARGS[@]}" "${CORRUPT_ARGS[@]}"
 fi
 
-if (( START_AT <= 5 )); then
+if (( START_AT <= 5 && 5 <= STOP_AFTER )); then
     echo "=== [5/6] plot_utils ==="
     # same folder naming as path_patching.py (one shared function)
     SUBDIR=$(python -c 'import sys; sys.path.insert(0, "src"); from shared_utils.plot_utils import results_subdir; print(results_subdir(sys.argv[1], int(sys.argv[2]), sys.argv[3], sys.argv[4] or None))'         "$CORRUPTION" "$SEED" "$POSITIONS" "$CORRUPT_TASK")
@@ -95,7 +97,7 @@ if (( START_AT <= 5 )); then
         --subdir "path_patching_per_receiver/$SUBDIR"
 fi
 
-if (( START_AT <= 6 )); then
+if (( START_AT <= 6 && 6 <= STOP_AFTER )); then
     echo "=== [6/6] top_edges ==="
     # every task adds to one shared JSON
     mkdir -p "output/$MODEL_SHORT/across_tasks/Behavior"
