@@ -26,6 +26,8 @@ Usage:
     python src/lth_corruption.py --d_name country-capital
     python src/lth_corruption.py --d_name antonym --n_prompts 100
     python src/lth_corruption.py --d_name synonym --swap_task antonym --conditions clean shuffled_pairs relation_swap
+    python src/lth_corruption.py --d_name antonym --swap_task synonym --heads 9,20 8,31 --run_tag xread ...
+        (cross-task readout: read other heads than the task's LTH list)
         (restricts items to those whose input also has a one-token --swap_task output; saved under *_swap-antonym)
 New tasks (not in LEGACY_TASKS) drop items whose input or output is itself a target/competing term word
 (e.g. "similar" in synonym), so a head cannot match the term list by copying content.
@@ -52,7 +54,7 @@ CONDITIONS = ["clean", "random_inputs", "shuffled_pairs", "unrelated_outputs", "
 COHERENCE_CONDITIONS = [f"animal_k{k}" for k in range(6)]
 # anomaly checks: swapped demos with a filler query (no city query); animals at input positions;
 # k of the 5 pairs mismatched (outputs rotated among k random demos; k=1 impossible)
-EXTRA_CONDITIONS = ["relation_swap", "swapped_filler_query", "animal_inputs", "animal_inputs_filler_outputs"] +                    [f"mismatch_k{k}" for k in (0, 2, 3, 4, 5)]
+EXTRA_CONDITIONS = ["relation_swap", "relation_swap_shuffled", "swapped_filler_query", "animal_inputs", "animal_inputs_filler_outputs"] +                    [f"mismatch_k{k}" for k in (0, 2, 3, 4, 5)]
 # single-token animal words: a consistent output category that is not the task's
 ANIMAL_WORDS = ["dog", "cat", "horse", "cow", "pig", "sheep", "goat", "lion", "tiger", "bear", "wolf", "fox", "deer",
                 "mouse", "duck", "goose", "eagle", "owl", "snake", "frog", "whale", "shark", "monkey", "camel", "turtle"]
@@ -146,6 +148,10 @@ def build_condition(condition: str, demos: list[dict], query: dict, rng: random.
         if any("swap" not in d for d in demos):
             raise ValueError("relation_swap needs --swap_task (items without a 'swap' output)")
         items = [{"input": d["input"], "output": d["swap"]} for d in demos]
+    elif condition == "relation_swap_shuffled":   # control: the same swap-task output words, pairs rotated by one
+        if any("swap" not in d for d in demos):
+            raise ValueError("relation_swap_shuffled needs --swap_task")
+        items = [{"input": d["input"], "output": demos[(i + 1) % len(demos)]["swap"]} for i, d in enumerate(demos)]
     elif condition == "zero_shot":           # query only, no demos
         return [query], query["output"]
     elif condition == "swapped_roles":
@@ -255,6 +261,8 @@ def main() -> None:
     parser.add_argument("--swap_task", type=str, default=None,
         help="for relation_swap: task giving each input's alternative output (e.g. antonym for synonym); "
              "restricts ALL conditions to items that have one, and adds _swap-<task> to the run name")
+    parser.add_argument("--heads", type=str, nargs="+", default=None, metavar="LAYER,HEAD",
+        help="heads to read instead of this task's LTH list (cross-task readout); use with --run_tag")
     parser.add_argument("--run_tag", type=str, default=None,
         help="suffix for the output folder, so a run with other conditions does not overwrite the base run")
     parser.add_argument("--ablation_tag", type=str, default=None,
@@ -265,7 +273,9 @@ def main() -> None:
     task_dir = os.path.join(args.save_root, model_short, args.d_name)
     with open(os.path.join(task_dir, "Heads", "MAPS_nnsight", f"shared_{args.d_name}_heads_p{args.threshold}_k{args.k}.json")) as f:
         lth = [tuple(h) for h in json.load(f)]
-    print("LTH:", [f"L{l}H{h}" for l, h in lth])
+    if args.heads:   # read these heads instead (e.g. another task's LTH on this task's prompts)
+        lth = [tuple(int(x) for x in h.split(",")) for h in args.heads]
+    print("heads read:", [f"L{l}H{h}" for l, h in lth])
     ablate_heads = [tuple(int(x) for x in h.split(",")) for h in args.ablate] if args.ablate else []
 
     model = LanguageModel(args.model_name, device_map="auto" if torch.cuda.is_available() else "cpu",
