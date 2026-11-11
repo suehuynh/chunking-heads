@@ -58,7 +58,8 @@ def main() -> None:
     ap.add_argument("--random_demos", action="store_true")
     ap.add_argument("--batch", type=int, default=50)
     ap.add_argument("--device", default="auto")
-    ap.add_argument("--save_root", default="output")
+    ap.add_argument("--save_root", default="output", help="where LTH lists / head labels are read from")
+    ap.add_argument("--out_root", default=None, help="where results go (default: save_root)")
     args = ap.parse_args()
 
     device = pick_device(args.device)
@@ -74,7 +75,7 @@ def main() -> None:
     labels = head_labels(args.save_root, args.model_name, args.d_name)
     labelled = set(labels[labels.label != "other"].lh)
     ids = task_terms(tok, args.d_name)
-    save_dir = os.path.join(model_dir(args.save_root, args.model_name), args.d_name, "path_ablation")
+    save_dir = os.path.join(model_dir(args.out_root or args.save_root, args.model_name), args.d_name, "path_ablation")
     os.makedirs(save_dir, exist_ok=True)
 
     pm = PromptMaker(tok, args.d_name, args.n_prompts, args.seed, input_len=args.input_len, random_demos=args.random_demos)
