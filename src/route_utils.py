@@ -11,15 +11,10 @@ import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from lth_corruption import ANIMAL_TERMS, FILLER_WORDS, build_condition  # noqa: E402
-from shared_utils.prompt_utils import build_chunk_labeled_prompts, filter_token_pairs_by_length  # noqa: E402
+from lth_corruption import ANIMAL_TERMS, COMPETING_TERMS, FILLER_WORDS, build_condition, load_items  # noqa: E402
+from shared_utils.prompt_utils import build_chunk_labeled_prompts  # noqa: E402
 
 Head = tuple[int, int]
-
-
-class _Shim:   # filter_token_pairs_by_length expects an object with .tokenizer
-    def __init__(self, tok):
-        self.tokenizer = tok
 
 
 def pick_device(name: str) -> str:
@@ -66,16 +61,19 @@ def term_ids(tok, terms: list[str]) -> torch.Tensor:
 def task_terms(tok, task: str) -> dict[str, torch.Tensor]:
     with open(os.path.join("datasets", "dataset_info", "task_relation_dict.json"), encoding="utf-8") as f:
         rel = json.load(f)
-    return {"target": term_ids(tok, rel[task]), "animal": term_ids(tok, ANIMAL_TERMS)}
+    out = {"target": term_ids(tok, rel[task]), "animal": term_ids(tok, ANIMAL_TERMS)}
+    if task in COMPETING_TERMS:   # e.g. "opposite" for synonym: reported as match_/score_competing
+        out["competing"] = term_ids(tok, COMPETING_TERMS[task])
+    return out
 
 
 class PromptMaker:
     """Builds the same prompts as lth_corruption.py for any of its conditions."""
 
-    def __init__(self, tok, task: str, n_prompts=100, seed=42, n_shot=5, input_len=1, random_demos=False):
+    def __init__(self, tok, task: str, n_prompts=100, seed=42, n_shot=5, input_len=1, random_demos=False,
+                 swap_task=None):
         self.tok, self.seed, self.n_shot = tok, seed, n_shot
-        with open(os.path.join("datasets", "abstractive", f"{task}.json"), encoding="utf-8") as f:
-            self.data = filter_token_pairs_by_length(json.load(f), _Shim(tok), input_len=input_len, output_len=1)
+        self.data = load_items(task, tok, input_len, swap_task)
         if not self.data:
             raise ValueError(f"{task}: no items with a {input_len}-token input and a 1-token output; "
                              f"multi-token inputs need --input_len (park-country: --input_len 5 --random_demos)")

@@ -50,6 +50,10 @@ def main() -> None:
     ap.add_argument("--d_name", required=True)
     ap.add_argument("--heads", nargs="+", default=None, metavar="LAYER,HEAD", help="default: the task's LTH list")
     ap.add_argument("--donors", nargs="+", default=DONORS, choices=DONORS)
+    ap.add_argument("--target", default="clean",
+        help="prompt whose values are kept (default clean). For category tasks use animal_outputs: there, "
+             "reading output slots gives 'animal' and reading inputs/query gives the task word, so verbalization "
+             "shows where the head looks (in clean prompts every content word maps to the task word)")
     ap.add_argument("--n_prompts", type=int, default=100)
     ap.add_argument("--seed", type=int, default=42)
     ap.add_argument("--input_len", type=int, default=1)
@@ -68,11 +72,12 @@ def main() -> None:
     heads = ([tuple(int(x) for x in h.split(",")) for h in args.heads] if args.heads
              else task_heads(args.save_root, args.model_name, args.d_name))
     ids = task_terms(tok, args.d_name)
-    save_dir = os.path.join(model_dir(args.save_root, args.model_name), args.d_name, "attention_transplant")
+    save_dir = os.path.join(model_dir(args.save_root, args.model_name), args.d_name, "attention_transplant"
+                            + ("" if args.target == "clean" else f"_target-{args.target}"))
     os.makedirs(save_dir, exist_ok=True)
 
     pm = PromptMaker(tok, args.d_name, args.n_prompts, args.seed, input_len=args.input_len, random_demos=args.random_demos)
-    clean, answers = pm.make("clean")
+    clean, answers = pm.make(args.target)   # "clean" below = the target prompt whose values are kept
     roles = clean[0]["roles"]
     L = len(clean[0]["input_ids"])
     assert all(len(p["input_ids"]) == L for p in clean)
@@ -94,7 +99,9 @@ def main() -> None:
     for d in args.donors:
         if d == "shuffled_pattern":
             continue
-        if d == "clean":
+        if d == "clean" and args.target != "clean":   # the real clean prompt, as a donor
+            prompts, _ = pm.make("clean")
+        elif d == "clean":
             prompts = clean
         elif d == "scrambled_delimiters":
             prompts = pm.scrambled_delimiters(clean)
@@ -109,10 +116,13 @@ def main() -> None:
             continue
         print(f"donor {d}: {tok.decode(prompts[0]['input_ids'][1:])[:110]!r}", flush=True)
         donor_rows[d] = attention_rows(prompts)
-    if "shuffled_pattern" in args.donors and "clean" in donor_rows:
+    if args.target != "clean":
+        donor_rows = {"target": attention_rows(clean), **donor_rows}
+    self_key = "target" if args.target != "clean" else "clean"
+    if "shuffled_pattern" in args.donors and self_key in donor_rows:
         g = torch.Generator().manual_seed(args.seed)
         sp = {}
-        for h, r in donor_rows["clean"].items():
+        for h, r in donor_rows[self_key].items():
             r2 = r.clone()
             for b in range(len(r)):   # permute non-BOS positions, per prompt
                 perm = torch.randperm(L - 1, generator=g) + 1
@@ -158,7 +168,7 @@ def main() -> None:
         base = run(head, None)
         for d, drows in [("none", None)] + list(donor_rows.items()):
             r = base if d == "none" else run(head, drows[head])
-            if d == "clean":   # sanity: rebuilding z from the clean row must reproduce the baseline
+            if d == self_key:   # sanity: rebuilding z from the clean row must reproduce the baseline
                 assert torch.allclose(r["score_target"], base["score_target"], atol=1e-2 if device == "cpu" else 0.3), \
                     f"{name}: clean transplant does not reproduce baseline"
             for b in range(len(X)):
@@ -175,7 +185,7 @@ def main() -> None:
     metrics = [c for c in df.columns if c.startswith(("match_", "score_", "donor_attn_"))] + ["correct"]
     summ = df.groupby(["head", "donor"], sort=False)[metrics].mean()
     summ.to_csv(os.path.join(save_dir, "summary.csv"))
-    json.dump({"heads": [f"L{l}H{h}" for l, h in heads], "donors": list(donor_rows), "n_prompts": len(X),
+    json.dump({"target": args.target, "heads": [f"L{l}H{h}" for l, h in heads], "donors": list(donor_rows), "n_prompts": len(X),
                "input_len": args.input_len, "random_demos": args.random_demos},
               open(os.path.join(save_dir, "run_info.json"), "w"), indent=2)
     pd.set_option("display.width", 220)

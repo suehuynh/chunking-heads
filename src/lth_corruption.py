@@ -12,6 +12,8 @@ For each prompt condition (same token length as clean):
     outputs_at_inputs  Hanoi: apple; London: shoe; China:          (output words, but at input positions)
     inputs_at_outputs  apple: Vietnam; shoe: England; China:       (input words, but at output positions)
     animal_outputs     Vietnam: dog; England: cat; China:          (consistent outputs, wrong category)
+    relation_swap      loud: quiet; humble: arrogant; ...; fast:   (synonym task, --swap_task antonym: same
+                                                                    inputs, outputs related by another relation)
     zero_shot          China:                                       (no demos; different length, a baseline)
 every LTH is scored at the last token by decoding its output (z_h @ W_O^h -> final norm -> unembed):
     maps_target       top-k contains a target term (e.g. "capital"): the identification criterion
@@ -23,6 +25,10 @@ and the model's accuracy on the condition's correct answer.
 Usage:
     python src/lth_corruption.py --d_name country-capital
     python src/lth_corruption.py --d_name antonym --n_prompts 100
+    python src/lth_corruption.py --d_name synonym --swap_task antonym --conditions clean shuffled_pairs relation_swap
+        (restricts items to those whose input also has a one-token --swap_task output; saved under *_swap-antonym)
+New tasks (not in LEGACY_TASKS) drop items whose input or output is itself a target/competing term word
+(e.g. "similar" in synonym), so a head cannot match the term list by copying content.
 """
 import argparse
 import json
@@ -46,7 +52,7 @@ CONDITIONS = ["clean", "random_inputs", "shuffled_pairs", "unrelated_outputs", "
 COHERENCE_CONDITIONS = [f"animal_k{k}" for k in range(6)]
 # anomaly checks: swapped demos with a filler query (no city query); animals at input positions;
 # k of the 5 pairs mismatched (outputs rotated among k random demos; k=1 impossible)
-EXTRA_CONDITIONS = ["swapped_filler_query", "animal_inputs", "animal_inputs_filler_outputs"] +                    [f"mismatch_k{k}" for k in (0, 2, 3, 4, 5)]
+EXTRA_CONDITIONS = ["relation_swap", "swapped_filler_query", "animal_inputs", "animal_inputs_filler_outputs"] +                    [f"mismatch_k{k}" for k in (0, 2, 3, 4, 5)]
 # single-token animal words: a consistent output category that is not the task's
 ANIMAL_WORDS = ["dog", "cat", "horse", "cow", "pig", "sheep", "goat", "lion", "tiger", "bear", "wolf", "fox", "deer",
                 "mouse", "duck", "goose", "eagle", "owl", "snake", "frog", "whale", "shark", "monkey", "camel", "turtle"]
@@ -59,7 +65,39 @@ FILLER_WORDS = ["apple", "shoe", "table", "river", "pencil", "cloud", "garden", 
 # terms for the task the swapped prompt asks for (capital -> country); empty -> reuse the target terms
 COMPETING_TERMS = {"country-capital": ["country", "countries", "nation", "nations"],
                    "present-past": ["present", "current", "now", "base"],
-                   "park-country": ["park", "parks", "national"]}
+                   "park-country": ["park", "parks", "national"],
+                   "synonym": ["opposite", "reverse", "antonym", "opposing", "contrary"],
+                   "antonym": ["synonym", "equivalent", "alike", "similar", "analogous", "interchangeable"]}
+# tasks whose results predate the term-word filter in load_items (kept unfiltered so old prompts reproduce)
+LEGACY_TASKS = {"country-capital", "antonym", "park-country", "present-past"}
+
+
+class _TokShim:   # filter_token_pairs_by_length expects an object with .tokenizer
+    def __init__(self, tok):
+        self.tokenizer = tok
+
+
+def load_items(task: str, tok, input_len: int = 1, swap_task: str | None = None,
+               dataset_folder: str = "datasets/abstractive", project_root: str = "") -> list[dict]:
+    """The task's items with a 1-token output and an input_len-token input. Shared by every script so
+    prompts match. New tasks: drop items whose input/output is a target or competing term word.
+    swap_task: keep only items whose input also has a 1-token output in swap_task (stored as "swap",
+    used by the relation_swap condition), different from the item's own output and not a term word."""
+    def raw(t):
+        with open(os.path.join(project_root, dataset_folder, f"{t}.json"), encoding="utf-8") as f:
+            return json.load(f)
+    data = filter_token_pairs_by_length(raw(task), _TokShim(tok), input_len=input_len, output_len=1)
+    with open(os.path.join(project_root, "datasets", "dataset_info", "task_relation_dict.json"), encoding="utf-8") as f:
+        rel = json.load(f)
+    bad = {w.lower() for w in rel.get(task, []) + COMPETING_TERMS.get(task, [])}
+    if task not in LEGACY_TASKS:
+        data = [d for d in data if d["input"].lower() not in bad and d["output"].lower() not in bad]
+    if swap_task:
+        other = {d["input"]: d["output"] for d in
+                 filter_token_pairs_by_length(raw(swap_task), _TokShim(tok), input_len=input_len, output_len=1)}
+        data = [{**d, "swap": other[d["input"]]} for d in data
+                if d["input"] in other and other[d["input"]] != d["output"] and other[d["input"]].lower() not in bad]
+    return data
 
 
 def _unwrap(saved):
@@ -104,6 +142,10 @@ def build_condition(condition: str, demos: list[dict], query: dict, rng: random.
         pos = sorted(rng.sample(range(len(demos)), k)) if k >= 2 else []
         new_out = {p: demos[pos[(j + 1) % len(pos)]]["output"] for j, p in enumerate(pos)}
         items = [{"input": d["input"], "output": new_out.get(i, d["output"])} for i, d in enumerate(demos)]
+    elif condition == "relation_swap":   # same inputs, outputs from another relation (needs items with "swap")
+        if any("swap" not in d for d in demos):
+            raise ValueError("relation_swap needs --swap_task (items without a 'swap' output)")
+        items = [{"input": d["input"], "output": d["swap"]} for d in demos]
     elif condition == "zero_shot":           # query only, no demos
         return [query], query["output"]
     elif condition == "swapped_roles":
@@ -210,6 +252,9 @@ def main() -> None:
     parser.add_argument("--random_demos", action="store_true",
         help="demos sampled at random (distinct outputs, none equal to the query's) instead of the 5 items "
              "before the query; needed when the dataset is sorted by output, e.g. park-country")
+    parser.add_argument("--swap_task", type=str, default=None,
+        help="for relation_swap: task giving each input's alternative output (e.g. antonym for synonym); "
+             "restricts ALL conditions to items that have one, and adds _swap-<task> to the run name")
     parser.add_argument("--run_tag", type=str, default=None,
         help="suffix for the output folder, so a run with other conditions does not overwrite the base run")
     parser.add_argument("--ablation_tag", type=str, default=None,
@@ -242,8 +287,8 @@ def main() -> None:
     animal_ids = term_ids(model, ANIMAL_TERMS)
     print(f"target terms {target_terms} | competing terms {competing_terms} | animal terms {ANIMAL_TERMS}")
 
-    with open(os.path.join(args.dataset_folder, f"{args.d_name}.json"), encoding="utf-8") as f:
-        dataset = filter_token_pairs_by_length(json.load(f), model, input_len=args.input_len, output_len=1)
+    dataset = load_items(args.d_name, model.tokenizer, args.input_len, args.swap_task,
+                         args.dataset_folder, args.project_root)
     rng = random.Random(args.seed)
     query_indices = sorted(rng.sample(range(len(dataset)), min(args.n_prompts, len(dataset))))
     print(f"{len(query_indices)} prompts per condition ({len(dataset)} items, input {args.input_len} token(s))")
@@ -289,19 +334,20 @@ def main() -> None:
             correct = (logits.argmax(dim=-1) == answer_ids[start:start + len(batch)]).float()
             for head in lth:
                 match_t, score_t = verbalization(model, outputs[head], target_ids, args.k)
-                _, score_c = verbalization(model, outputs[head], competing_ids, args.k)
+                match_c, score_c = verbalization(model, outputs[head], competing_ids, args.k)
                 match_a, score_a = verbalization(model, outputs[head], animal_ids, args.k)
                 for b in range(len(batch)):
                     row = {"condition": condition, "lth": f"L{head[0]}H{head[1]}", "prompt": start + b,
                            "maps_target": match_t[b].item(), "score_target": score_t[b].item(),
-                           "score_competing": score_c[b].item(), "maps_animal": match_a[b].item(),
+                           "maps_competing": match_c[b].item(), "score_competing": score_c[b].item(), "maps_animal": match_a[b].item(),
                            "score_animal": score_a[b].item(), "correct": correct[b].item()}
                     for role in ROLES:
                         row[f"attn_{role}"] = attention[head][b, [i for i, r in enumerate(roles) if r == role]].sum().item()
                     rows.append(row)
 
     df = pd.DataFrame(rows)
-    run_name = f"{args.n_shot}shot_seed{args.seed}" + (f"_{args.run_tag}" if args.run_tag else "")
+    run_name = (f"{args.n_shot}shot_seed{args.seed}" + (f"_swap-{args.swap_task}" if args.swap_task else "")
+                + (f"_{args.run_tag}" if args.run_tag else ""))
     if ablate_heads:
         tag = args.ablation_tag or "-".join(args.ablate).replace(",", "_")
         run_name += f"_ablate-{tag}" + ("_control" + (str(args.control_rep) if args.control_rep else "") if args.control else "")
@@ -312,7 +358,7 @@ def main() -> None:
                    "control": args.control, "n_prompts": len(query_indices), "lth": [f"L{l}H{h}" for l, h in lth]}, f, indent=2)
     df.to_csv(os.path.join(save_dir, "per_prompt.csv"), index=False)
 
-    metrics = (["maps_target", "score_target", "score_competing", "maps_animal", "score_animal", "correct"]
+    metrics = (["maps_target", "score_target", "maps_competing", "score_competing", "maps_animal", "score_animal", "correct"]
                + [f"attn_{r}" for r in ROLES])
     per_lth = df.groupby(["condition", "lth"], sort=False)[metrics].mean().reset_index()
     per_lth.to_csv(os.path.join(save_dir, "per_lth.csv"), index=False)

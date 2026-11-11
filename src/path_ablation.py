@@ -200,6 +200,7 @@ def main() -> None:
     df = pd.DataFrame(rows)
     df.to_csv(os.path.join(save_dir, "per_prompt.csv"), index=False)
     metrics = ["match_target", "score_target", "match_animal", "attn_output", "attn_query", "correct"]
+    metrics += [m for m in ["match_competing", "score_competing"] if m in df.columns]
     per_rep = df.groupby(["condition", "receiver", "senders", "kind", "path", "rep"], sort=False)[metrics].mean()
     summ = per_rep.groupby(level=[0, 1, 2, 3, 4], sort=False).agg(["mean", "min", "max"])
     summ.columns = [f"{a}_{b}" for a, b in summ.columns]

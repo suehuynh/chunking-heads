@@ -1,5 +1,5 @@
 """H-c test: do pair-binding heads write the relation into demo-output positions, where relation LTH
-(L8H31 for antonym) read it?
+(--relation_head; L8H31 for antonym) read it?
 
 Two prompts per query with IDENTICAL output tokens at identical positions:
     C (clean)       hot: cold; big: small; fast: slow; ...; up:
@@ -9,11 +9,14 @@ so only the input each output belongs to differs. Interventions at demo-OUTPUT p
     control z patch   same number of random same-layer heads (no head-type label, not LTH), --n_controls draws
     residual sweep    the whole residual stream entering layer L (L = 0..9), from the source run
 in two directions: M -> C (necessity: does clean verbalization drop?) and C -> M (sufficiency: does it rise?).
-Read-outs at the last token: each antonym LTH's decoded output (top-10 contains an antonym term; term score),
-L8H31 attention to outputs, and model accuracy.
+Read-outs at the last token: each LTH's decoded output (top-10 contains a task term; term score), the
+relation head's attention to outputs, and model accuracy.
+Binder sets: all labelled pair-binding heads below the relation head's layer; for antonym also the 3 binders
+used in the ablation runs.
 
-Usage:  python src/binder_patching.py
-Output: output/<model>/antonym/binder_patching/{per_prompt.csv, summary.csv}
+Usage:  python src/binder_patching.py                                     (antonym, L8H31)
+        python src/binder_patching.py --d_name synonym --relation_head 8,31
+Output: output/<model>/<task>/binder_patching/{per_prompt.csv, summary.csv}
 """
 import argparse
 import json
@@ -26,21 +29,19 @@ import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from shared_utils.prompt_utils import build_chunk_labeled_prompts, filter_token_pairs_by_length  # noqa: E402
+from lth_corruption import load_items  # noqa: E402
+from shared_utils.prompt_utils import build_chunk_labeled_prompts  # noqa: E402
 
 torch.set_grad_enabled(False)
-BINDERS = {"binders": [(5, 22), (6, 14), (5, 6)]}   # antonym binders used in the ablation runs
-
-
-class Shim:
-    def __init__(self, tok):
-        self.tokenizer = tok
+ANTONYM_BINDERS = [(5, 22), (6, 14), (5, 6)]   # antonym binders used in the ablation runs
 
 
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--model_name", default="meta-llama/Llama-3.2-1B-Instruct")
     ap.add_argument("--d_name", default="antonym")
+    ap.add_argument("--relation_head", default="8,31", metavar="LAYER,HEAD",
+                    help="relation LTH whose attention to outputs is read (must be in the task's LTH list)")
     ap.add_argument("--n_prompts", type=int, default=100)
     ap.add_argument("--n_controls", type=int, default=5)
     ap.add_argument("--seed", type=int, default=42)
@@ -61,9 +62,13 @@ def main() -> None:
 
     lth = [tuple(x) for x in json.load(open(os.path.join(
         mdir, args.d_name, "Heads", "MAPS_nnsight", f"shared_{args.d_name}_heads_p0.1_k10.json")))]
+    RL, RH = (int(x) for x in args.relation_head.split(","))
+    rname = f"L{RL}H{RH}"
+    assert (RL, RH) in lth, f"{rname} is not an LTH of {args.d_name}: {lth}"
+    BINDERS = {"binders": ANTONYM_BINDERS} if args.d_name == "antonym" else {}
     labels = pd.read_csv(os.path.join(mdir, args.d_name, "sender_classification", "all_heads.csv"))
     # all pair-binding heads (content or symbolic) below the relation LTH's layer
-    pb = labels[labels.label.str.contains("pair_binding") & (labels.layer < 8)]
+    pb = labels[labels.label.str.contains("pair_binding") & (labels.layer < RL)]
     BINDERS["all_pair_binding"] = [(int(r.layer), int(r.head.split("H")[1])) for r in pb.itertuples()]
     labelled = {(int(r.layer), int(r.head.split("H")[1])) for r in labels[labels.label != "other"].itertuples()}
 
@@ -77,8 +82,7 @@ def main() -> None:
     term_ids = torch.tensor(sorted(ids))
 
     # ---------- prompts ----------
-    data = filter_token_pairs_by_length(json.load(open(f"datasets/abstractive/{args.d_name}.json", encoding="utf-8")),
-                                        Shim(tok), 1, 1)
+    data = load_items(args.d_name, tok, 1)
     rng = random.Random(args.seed)
     q_idx = sorted(rng.sample(range(len(data)), min(args.n_prompts, len(data))))
     P = {"C": [], "M": []}
@@ -135,7 +139,7 @@ def main() -> None:
                 lg = final_norm(z) @ W_U.T
                 out["match"][(l, h)].append(torch.isin(lg.topk(10, -1).indices, term_ids).any(-1).float())
                 out["score"][(l, h)].append(lg[:, term_ids].max(-1).values - lg.mean(-1))
-            out["attn_out"].append(o.attentions[8][:, 31, -1, out_pos].sum(-1))
+            out["attn_out"].append(o.attentions[RL][:, RH, -1, out_pos].sum(-1))
             out["correct"].append((o.logits[:, -1].argmax(-1) == answers[sl]).float())
             for l in capture_layers:
                 out["z"][l].append(zin[l])
@@ -171,7 +175,7 @@ def main() -> None:
     def record(direction, intervention, kind, rep, r):
         for b in range(len(q_idx)):
             row = {"direction": direction, "intervention": intervention, "kind": kind, "rep": rep, "prompt": b,
-                   "attn_out_L8H31": r["attn_out"][b].item(), "correct": r["correct"][b].item()}
+                   f"attn_out_{rname}": r["attn_out"][b].item(), "correct": r["correct"][b].item()}
             for h in lth:
                 row[f"match_L{h[0]}H{h[1]}"] = r["match"][h][b].item()
                 row[f"score_L{h[0]}H{h[1]}"] = r["score"][h][b].item()
@@ -194,11 +198,11 @@ def main() -> None:
 
     df = pd.DataFrame(rows)
     df.to_csv(os.path.join(save_dir, "per_prompt.csv"), index=False)
-    metrics = ["match_L8H31", "score_L8H31", "attn_out_L8H31", "correct"]
+    metrics = [f"match_{rname}", f"score_{rname}", f"attn_out_{rname}", "correct"]
     df["match_all_lth"] = df[[f"match_L{l}H{h}" for l, h in lth]].mean(1)
     summ = df.groupby(["direction", "intervention"], sort=False)[metrics + ["match_all_lth"]].mean()
     summ.to_csv(os.path.join(save_dir, "summary.csv"))
-    json.dump({"binders": {k: [f"L{l}H{h}" for l, h in v] for k, v in BINDERS.items()}, "lth": [f"L{l}H{h}" for l, h in lth],
+    json.dump({"relation_head": rname, "binders": {k: [f"L{l}H{h}" for l, h in v] for k, v in BINDERS.items()}, "lth": [f"L{l}H{h}" for l, h in lth],
                "n_prompts": len(q_idx)}, open(os.path.join(save_dir, "run_info.json"), "w"), indent=2)
     pd.set_option("display.width", 200)
     print(summ.round(3).to_string())

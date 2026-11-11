@@ -71,7 +71,7 @@ def head_outputs(model: LanguageModel, input_ids: torch.Tensor, heads: list[Head
 
 
 def cosine_similarity_matrices(x: torch.Tensor) -> torch.Tensor:
-    """[n, seq, d] -> [n, seq, seq] cosine similarity between positions."""
+    """[b, seq, d] -> [b, seq, seq] cosine similarity between positions."""
     normed = F.normalize(x, dim=-1)
     return normed @ normed.transpose(-1, -2)
 
