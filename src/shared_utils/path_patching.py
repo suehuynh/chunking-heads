@@ -11,7 +11,7 @@ from torch import Tensor
 from tqdm.auto import tqdm
 
 from wrapper import ModelAccessor, get_accessor_config, get_model_specs
-from prompt_utils import generate_few_shot_prompts, generate_instruction_prompts, create_few_shot_prompts, create_zs_prompts, create_corrupt_prompts_input_shuffle, create_corrupt_prompts_output_shuffle
+from prompt_utils import model_inputs, generate_few_shot_prompts, generate_instruction_prompts, create_few_shot_prompts, create_zs_prompts, create_corrupt_prompts_input_shuffle, create_corrupt_prompts_output_shuffle
 from plot_utils import EP_CORRUPTIONS, IP_CORRUPTIONS, results_subdir
 
 
@@ -157,7 +157,7 @@ def path_patch_sender_to_receivers(
 
     #  Cache Clean Activations
     with accessor.trace(remote=remote) as tracer_clean_cache:
-        with tracer_clean_cache.invoke(clean_tokens):
+        with tracer_clean_cache.invoke(model_inputs(model, clean_tokens)):
             for layer in sender_layers_to_cache:
                 is_sender_layer_attn = any(idx < n_heads for idx in valid_sender_components.get(layer, set()))
                 is_sender_layer_mlp = n_heads in valid_sender_components.get(layer, set())
@@ -176,7 +176,7 @@ def path_patch_sender_to_receivers(
 
     #  Cache Corrupt Activations
     with accessor.trace(remote=remote) as tracer_corrupt_cache:
-        with tracer_corrupt_cache.invoke(corrupt_tokens):
+        with tracer_corrupt_cache.invoke(model_inputs(model, corrupt_tokens)):
             for layer in range(n_layers):  # Cache ALL layers and ALL positions needed for freezing #TODO: double check to improve efficiency 
                 try:
                     corrupt_attn_proxies[layer] = accessor.layers[layer].attention.output.unwrap().input[:, :].save()
@@ -213,7 +213,7 @@ def path_patch_sender_to_receivers(
             patched_receiver_activations_proxies = {}  # Store saved PROXIES for receivers
             run1_success = False
             with accessor.trace(remote=remote) as tracer_run1:
-                with tracer_run1.invoke(corrupt_tokens):
+                with tracer_run1.invoke(model_inputs(model, corrupt_tokens)):
                     #  Step 1: Freeze layers BEFORE sender at freeze_pos
                     for current_layer in range(sender_layer):
                         if current_layer in corrupt_attn_proxies:
@@ -297,7 +297,7 @@ def path_patch_sender_to_receivers(
             intervened_logits_obj = None
             run2_success = False
             with accessor.trace(remote=remote) as tracer_run2:
-                with tracer_run2.invoke(corrupt_tokens):
+                with tracer_run2.invoke(model_inputs(model, corrupt_tokens)):
                     # Iterate through ALL layers to patch at receiver_pos
                     for current_layer in range(n_layers):
                         mlp_idx = n_heads
@@ -537,7 +537,7 @@ def path_patch_sender_to_receiver(
             valid_sender_components[layer].add(n_heads)
 
     with accessor.trace(remote=remote) as tracer_clean_cache:
-        with tracer_clean_cache.invoke(clean_tokens):
+        with tracer_clean_cache.invoke(model_inputs(model, clean_tokens)):
             for layer in sender_layers_to_cache:
                 is_sender_layer_attn = any(idx < n_heads for idx in valid_sender_components.get(layer, set()))
                 is_sender_layer_mlp = n_heads in valid_sender_components.get(layer, set())
@@ -553,7 +553,7 @@ def path_patch_sender_to_receiver(
                         print(f"Clean Cache Proxy Save Warning: MLP layer {layer}. {e}")
 
     with accessor.trace(remote=remote) as tracer_corrupt_cache:
-        with tracer_corrupt_cache.invoke(corrupt_tokens):
+        with tracer_corrupt_cache.invoke(model_inputs(model, corrupt_tokens)):
             for layer in range(n_layers):
                 try:
                     corrupt_attn_proxies[layer] = accessor.layers[layer].attention.output.unwrap().input[:, :].save()
@@ -582,7 +582,7 @@ def path_patch_sender_to_receiver(
             # Run 1: freeze pre-sender & intermediate layers, patch sender -> save the ONE receiver's activation
             patched_receiver_activation_proxy = None
             with accessor.trace(remote=remote) as tracer_run1:
-                with tracer_run1.invoke(corrupt_tokens):
+                with tracer_run1.invoke(model_inputs(model, corrupt_tokens)):
                     for current_layer in range(sender_layer):
                         if current_layer in corrupt_attn_proxies:
                             accessor.layers[current_layer].attention.output.unwrap().input[:, freeze_pos] = (
@@ -640,7 +640,7 @@ def path_patch_sender_to_receiver(
             # Run 2: patch just this one receiver, get final logits
             intervened_logits_obj = None
             with accessor.trace(remote=remote) as tracer_run2:
-                with tracer_run2.invoke(corrupt_tokens):
+                with tracer_run2.invoke(model_inputs(model, corrupt_tokens)):
                     if rec_comp_idx < n_heads:
                         current_attn_input = accessor.layers[rec_layer].attention.output.unwrap().input[...]
                         current_attn_reshaped = current_attn_input.reshape(batch_size, len(all_pos), n_heads, d_head)
@@ -770,6 +770,11 @@ if __name__ == "__main__":
     help="p: minimum fraction of prompts a head must match to count as a lexical task head")
     parser.add_argument("--receivers", type=str, nargs="+", default=None, metavar="LAYER,HEAD",
         help="one-off receivers, e.g. --receivers 7,5 9,4; replaces the shared-LTH JSON list")
+    parser.add_argument("--n_shot", type=int, default=5, help="EP only: shots per prompt")
+    parser.add_argument("--lth_list", type=str, default="union", choices=["union", "per_shot"],
+        help="EP only: receivers from the union over shot counts (shared_<task>_heads...json, the original "
+             "runs) or from the --n_shot list alone (<n>_shot_<task>_heads...json; results go to a "
+             "folder with suffix _<n>shot)")
 
     args = parser.parse_args()
     allowed = {"EP": EP_CORRUPTIONS, "IP": IP_CORRUPTIONS}.get(args.prompt_type)
@@ -819,6 +824,10 @@ if __name__ == "__main__":
         args.save_root, model_name, args.d_name, "Heads", "MAPS_nnsight",
         f"shared_{args.d_name}_{type_tag}heads_p{args.threshold}_k{args.k}.json",
     )
+    per_shot = args.prompt_type == "EP" and args.lth_list == "per_shot"
+    if per_shot:
+        save_path = os.path.join(args.save_root, model_name, args.d_name, "Heads", "MAPS_nnsight",
+                                 f"{args.n_shot}_shot_{args.d_name}_heads_p{args.threshold}_k{args.k}.json")
     if args.receivers is not None:
         receiver_list = [[int(x) for x in r.split(",")] for r in args.receivers]
     else:
@@ -836,7 +845,7 @@ if __name__ == "__main__":
         with open(file_path, "r") as f:
             correct_dataset = json.load(f)
         # prompt_temp_idx_list = [1,2,3,4,5,10,20,30]
-        prompt_temp_idx_list = [5]
+        prompt_temp_idx_list = [args.n_shot]
     elif args.prompt_type == "IP":
         with open(os.path.join(args.project_root, "datasets", "dataset_info", "instruction_dict.json")) as f:
             instruction_dict = json.load(f)
@@ -941,7 +950,8 @@ if __name__ == "__main__":
             batch_size=args.batch_size, remote=args.remote, sender_pos=pos, receiver_pos=pos, freeze_pos=pos)
         
         # save_dir = os.path.join(args.save_root, model_name, args.d_name, "path_patching")
-        corruption_dir = results_subdir(args.corruption_type, args.seed, args.positions, args.corrupt_task)
+        corruption_dir = results_subdir(args.corruption_type, args.seed, args.positions, args.corrupt_task,
+                                        args.n_shot if per_shot else None)
         save_dir = os.path.join(args.save_root, model_name, args.d_name, "path_patching_per_receiver", corruption_dir)
         os.makedirs(save_dir, exist_ok=True)
         save_path = os.path.join(save_dir, f"{args.prompt_type}_L{receiver[0]}H{receiver[1]}_batch_results_tensor.pt")
@@ -953,5 +963,7 @@ if __name__ == "__main__":
         json.dump({"prompt_type": args.prompt_type, "template": prompt_temp_idx_list[-1],
                    "corruption_type": args.corruption_type, "corrupt_task": args.corrupt_task,
                    "positions": args.positions, "seed": args.seed, "n_prompts": len(clean_prompts),
-                   "receivers": receiver_list, "example_clean": clean_prompts[0],
+                   "receivers": receiver_list, "lth_list": args.lth_list if args.prompt_type == "EP" else None,
+                   "receiver_file": save_path if args.receivers is None else None,
+                   "attention_mask": True, "example_clean": clean_prompts[0],
                    "example_corrupt": corrupt_prompts[0]}, f, indent=2)

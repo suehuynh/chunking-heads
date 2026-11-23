@@ -35,9 +35,14 @@ EP_CORRUPTIONS = ["zs", "shuffle_input", "shuffle_output"]
 IP_CORRUPTIONS = ["random_query", "relation", "zs", "minimal"]
 
 
-def results_subdir(corruption_type: str, seed: int, positions: str, corrupt_task: str | None = None) -> str:
+def results_subdir(corruption_type: str, seed: int, positions: str, corrupt_task: str | None = None,
+                   n_shot: int | None = None) -> str:
     """Folder name under path_patching_per_receiver/ that path_patching.py writes to.
-    Only the shuffles are random, so only they carry the seed; relation names the corrupting task."""
+    Only the shuffles are random, so only they carry the seed; relation names the corrupting task.
+    n_shot: set for runs on one shot count with that shot count's LTH list (adds _<n>shot); None = the
+    original runs (5-shot prompts, union LTH list), whose folders keep their old names."""
+    if n_shot is not None:
+        return results_subdir(corruption_type, seed, positions, corrupt_task) + f"_{n_shot}shot"
     if corruption_type.startswith("shuffle"):
         name = f"{corruption_type}_seed{seed}"
     elif corruption_type == "relation":

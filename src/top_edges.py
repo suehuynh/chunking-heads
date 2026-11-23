@@ -39,6 +39,8 @@ def main() -> None:
     parser.add_argument("--corrupt_task", type=str, default=None, help="IP relation runs: the corrupting task")
     parser.add_argument("--positions", type=str, default="all", choices=["last", "all"])
     parser.add_argument("--top_k", type=int, default=10)
+    parser.add_argument("--n_shot", type=int, default=None,
+        help="runs made with path_patching.py --lth_list per_shot (folder suffix _<n>shot)")
     parser.add_argument("--model_name", type=str, default="meta-llama/Llama-3.2-1B-Instruct")
     parser.add_argument("--prompt_type", type=str, default="EP", choices=["EP", "IP"])
     parser.add_argument("--save_root", type=str, default="output")
@@ -46,7 +48,7 @@ def main() -> None:
 
     model_dir = os.path.join(args.save_root, args.model_name.split("/")[-1])
     runs_dir = os.path.join(model_dir, args.d_name, "path_patching_per_receiver")
-    subdir = results_subdir(args.corruption_type, args.seed, args.positions, args.corrupt_task)
+    subdir = results_subdir(args.corruption_type, args.seed, args.positions, args.corrupt_task, args.n_shot)
     if subdir == "zs_lastpos" and not os.path.isdir(os.path.join(runs_dir, subdir)):
         subdir = "zs"  # runs from before the _lastpos suffix existed
     csv_path = os.path.join(runs_dir, subdir, f"{args.prompt_type}_path_patching_summary.csv")

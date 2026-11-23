@@ -23,6 +23,10 @@
 # Instruction prompts (IP; last position only; corruptions random_query | relation | zs | minimal):
 #   PROMPT_TYPE=IP sbatch -J ip_country-capital oscar/run_pipeline.sbatch country-capital last random_query
 #   PROMPT_TYPE=IP CORRUPT_TASK=antonym START_AT=4 sbatch oscar/run_pipeline.sbatch country-capital last relation
+# One shot count throughout (EP): behavior, identification and lists for N shots only, then path patching on
+# N-shot prompts with the N-shot LTH list (results in path_patching_per_receiver/<corruption>_<pos>_<N>shot):
+#   N_SHOT=10 sbatch -J pp10_antonym oscar/run_pipeline.sbatch antonym all shuffle_input
+#   N_SHOT=10 START_AT=4 sbatch -J pp10_antonym oscar/run_pipeline.sbatch antonym all shuffle_input   (lists already built)
 
 set -euo pipefail
 mkdir -p logs
@@ -35,6 +39,12 @@ START_AT="${START_AT:-1}"
 STOP_AFTER="${STOP_AFTER:-6}"   # last step to run, e.g. STOP_AFTER=3 = behavior + head identification only
 RECEIVER_ARGS=()
 if [[ -n "${RECEIVERS:-}" ]]; then RECEIVER_ARGS=(--receivers $RECEIVERS); fi
+N_SHOT="${N_SHOT:-}"   # EP: one shot count throughout (empty = original: shots 5/10/20/30, union list, 5-shot patching)
+SHOT_BEHAV=(); SHOT_IDENT=(); SHOT_PP=(); SHOT_TOP=(); SUBDIR_SHOT=""
+if [[ -n "$N_SHOT" ]]; then
+    SHOT_BEHAV=(--shots "$N_SHOT"); SHOT_IDENT=(--templates "$N_SHOT")
+    SHOT_PP=(--n_shot "$N_SHOT" --lth_list per_shot); SHOT_TOP=(--n_shot "$N_SHOT"); SUBDIR_SHOT="$N_SHOT"
+fi
 CORRUPT_TASK="${CORRUPT_TASK:-}"  # IP relation corruption: the task whose instruction replaces the clean one
 CORRUPT_ARGS=()
 if [[ -n "$CORRUPT_TASK" ]]; then CORRUPT_ARGS=(--corrupt_task "$CORRUPT_TASK"); fi
@@ -63,7 +73,7 @@ if (( START_AT <= 1 && 1 <= STOP_AFTER )); then
     # every task shares one behavior JSON (read-modify-write)
     mkdir -p "output/$MODEL_SHORT/across_tasks/Behavior"
     flock "output/$MODEL_SHORT/across_tasks/Behavior/.lock" \
-        python src/behavior_variance.py "${COMMON[@]}" --batch_size 20
+        python src/behavior_variance.py "${COMMON[@]}" --batch_size 20 "${SHOT_BEHAV[@]}"
 fi
 
 if (( START_AT <= 2 && 2 <= STOP_AFTER )); then
@@ -71,13 +81,13 @@ if (( START_AT <= 2 && 2 <= STOP_AFTER )); then
     # original identification: first --exp_size correct prompts (script default, 100) per template
     # (EP: shot counts 5/10/20/30; IP: instruction templates 0-4)
     python src/identify_heads_nn.py "${COMMON[@]}" --component_type lexical_task \
-        --k "$K" --batch_size 20
+        --k "$K" --batch_size 20 "${SHOT_IDENT[@]}"
 fi
 
 if (( START_AT <= 3 && 3 <= STOP_AFTER )); then
     echo "=== [3/6] shared_heads_nn ==="
     python src/shared_heads_nn.py "${COMMON[@]}" --component_type lexical_task \
-        --k "$K" --threshold "$THRESHOLD"
+        --k "$K" --threshold "$THRESHOLD" "${SHOT_IDENT[@]}"
 fi
 
 if (( START_AT <= 4 && 4 <= STOP_AFTER )); then
@@ -85,13 +95,13 @@ if (( START_AT <= 4 && 4 <= STOP_AFTER )); then
     python src/shared_utils/path_patching.py "${COMMON[@]}" --component_type lexical_task \
         --k "$K" --threshold "$THRESHOLD" --corruption_type "$CORRUPTION" \
         --positions "$POSITIONS" --input_length "$INPUT_LENGTH" \
-        --exp_size "$EXP_SIZE" --seed "$SEED" --batch_size "$BATCH_SIZE" "${RECEIVER_ARGS[@]}" "${CORRUPT_ARGS[@]}"
+        --exp_size "$EXP_SIZE" --seed "$SEED" --batch_size "$BATCH_SIZE" "${RECEIVER_ARGS[@]}" "${CORRUPT_ARGS[@]}" "${SHOT_PP[@]}"
 fi
 
 if (( START_AT <= 5 && 5 <= STOP_AFTER )); then
     echo "=== [5/6] plot_utils ==="
     # same folder naming as path_patching.py (one shared function)
-    SUBDIR=$(python -c 'import sys; sys.path.insert(0, "src"); from shared_utils.plot_utils import results_subdir; print(results_subdir(sys.argv[1], int(sys.argv[2]), sys.argv[3], sys.argv[4] or None))'         "$CORRUPTION" "$SEED" "$POSITIONS" "$CORRUPT_TASK")
+    SUBDIR=$(python -c 'import sys; sys.path.insert(0, "src"); from shared_utils.plot_utils import results_subdir; print(results_subdir(sys.argv[1], int(sys.argv[2]), sys.argv[3], sys.argv[4] or None, int(sys.argv[5]) if sys.argv[5] else None))'         "$CORRUPTION" "$SEED" "$POSITIONS" "$CORRUPT_TASK" "$SUBDIR_SHOT")
     python src/shared_utils/plot_utils.py --model_name "$MODEL" --d_name "$TASK" \
         --prompt_type "$PROMPT_TYPE" --save_root output \
         --subdir "path_patching_per_receiver/$SUBDIR"
@@ -103,7 +113,7 @@ if (( START_AT <= 6 && 6 <= STOP_AFTER )); then
     mkdir -p "output/$MODEL_SHORT/across_tasks/Behavior"
     flock "output/$MODEL_SHORT/across_tasks/Behavior/.top_edges.lock" \
         python src/top_edges.py --model_name "$MODEL" --d_name "$TASK" --prompt_type "$PROMPT_TYPE" \
-            --save_root output --corruption_type "$CORRUPTION" --seed "$SEED" --positions "$POSITIONS"             "${CORRUPT_ARGS[@]}"
+            --save_root output --corruption_type "$CORRUPTION" --seed "$SEED" --positions "$POSITIONS"             "${CORRUPT_ARGS[@]}" "${SHOT_TOP[@]}"
 fi
 
 echo "=== done: $TASK ==="

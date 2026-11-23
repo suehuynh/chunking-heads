@@ -10,6 +10,25 @@ from nnsight import LanguageModel
 # from Fix_incorrect_prompts.Fix_incorrect_prompts_utils import *
 
 
+def model_inputs(model, input_ids: torch.Tensor, trim: bool = False) -> dict:
+    """Left-padded token ids -> {"input_ids", "attention_mask"} for model.trace / tracer.invoke.
+
+    Passing a bare id tensor makes the model attend to the padding tokens as if they were text (2026-11-22:
+    last-token logits off by up to ~11 vs the unpadded prompt). Pad tokens are only ever added by the
+    tokenizer, so mask = ids != pad_token_id. trim=True also drops the columns that are padding in every row
+    of this batch (only use it when you read the last position, not when positions must align across runs)."""
+    pad = getattr(model.tokenizer, "pad_token_id", None)
+    if pad is None:
+        mask = torch.ones_like(input_ids)
+    else:
+        mask = (input_ids != pad).long()
+    if trim and mask.shape[1] > 0:
+        keep = mask.any(0).nonzero()
+        first = int(keep.min()) if len(keep) else 0
+        input_ids, mask = input_ids[:, first:], mask[:, first:]
+    return {"input_ids": input_ids, "attention_mask": mask}
+
+
 def filter_token_pairs_by_length(raw_dataset, nn_model, input_len=1, output_len=1):
     filtered_dataset = []
 
@@ -191,7 +210,8 @@ def return_correct_index(model, prompts, answers,
         batch_prompt_tokens = prompt_tokens[i : i + batch_size]
         batch_answer_tokens = answer_tokens[i : i + batch_size]
         batch_pred_tokens = (
-            model.trace(batch_prompt_tokens, trace=False, remote=remote).logits[:, -1, :].argmax(dim=-1).cpu()
+            model.trace(model_inputs(model, batch_prompt_tokens, trim=True), trace=False, remote=remote)
+            .logits[:, -1, :].argmax(dim=-1).cpu()
         )
         if return_pred_tokens:
             pred_tokens.extend(batch_pred_tokens.tolist())
@@ -953,7 +973,7 @@ def check_correctness(
         # batch_pred_tokens = (
         #     model.trace(batch_prompt_tokens, trace=False, remote=remote).logits[:, -1, :].argmax(dim=-1).cpu()
         # )
-        with model.trace(batch_prompt_tokens, remote=remote) as tracer:
+        with model.trace(model_inputs(model, batch_prompt_tokens, trim=True), remote=remote) as tracer:
             batch_pred_tokens_proxy = model.output.logits[:, -1, :].argmax(dim=-1).save()
         batch_pred_tokens = batch_pred_tokens_proxy.cpu()
 

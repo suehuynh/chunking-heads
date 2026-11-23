@@ -128,6 +128,9 @@ if __name__ == "__main__":
             save_dir, f"{prompt_template_index}_{template_name}_{args.d_name}_heads_p{args.threshold}_k{args.k}.json")
         with open(template_path, "w") as f:
             json.dump(head_list, f)
+    if args.templates:   # a subset of templates: write only the per-template lists, keep the union file as is
+        print("--templates given: per-template lists written; shared (union) list not rewritten")
+        raise SystemExit(0)
     shared_heads = []
     for key, value in lexical_dict.items():
         for head in value:

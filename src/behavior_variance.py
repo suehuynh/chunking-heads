@@ -27,6 +27,8 @@ if __name__ == "__main__":
     parser.add_argument("--remote", type=bool, default=False, help="whether to use NDIF to run model remotely")
     # parser.add_argument("--dataset_folder", type=str, default="../datasets/abstractive", help="folder of the dataset")
     parser.add_argument("--dataset_folder", type=str, default="datasets/abstractive", help="folder of the dataset")
+    parser.add_argument("--shots", type=int, nargs="+", default=None,
+        help="EP: only these shot counts (IP: template indices); other entries already in the file are kept")
 
     args = parser.parse_args()
     model_name = args.model_name
@@ -80,10 +82,13 @@ if __name__ == "__main__":
     ) as f:
         instruction_dict = json.load(f)
 
-    # Run inference and check correctness
-    result_dict[d_name] = {}
+    if args.shots:
+        prompt_temp_idx_list = args.shots
+
+    # Run inference and check correctness (entries for other shot counts / templates are kept)
+    result_dict.setdefault(d_name, {})
     for prompt_temp_index_idx in prompt_temp_idx_list:
-        result_dict[d_name][prompt_temp_index_idx] = {}
+        entry = result_dict[d_name][str(prompt_temp_index_idx)] = {}   # str key: what json.load gives back
         with open(os.path.join(dataset_folder, f"{d_name}.json")) as f: 
             dataset = json.load(f)
         if prompt_type == "EP":
@@ -100,10 +105,10 @@ if __name__ == "__main__":
         )
         correct_index = prompt_dict['correct_index']
         acc = len(correct_index) / len(prompts)
-        result_dict[d_name][prompt_temp_index_idx]['accuracy'] = acc
-        result_dict[d_name][prompt_temp_index_idx]['correct_index'] = correct_index
-        result_dict[d_name][prompt_temp_index_idx]['n_correct_index'] = len(correct_index)
-        result_dict[d_name][prompt_temp_index_idx]['n_dataset'] = len(prompts)
+        entry['accuracy'] = acc
+        entry['correct_index'] = correct_index
+        entry['n_correct_index'] = len(correct_index)
+        entry['n_dataset'] = len(prompts)
     # Save after each dataset is done 
     if not os.path.exists(save_path):
         os.makedirs(save_path)

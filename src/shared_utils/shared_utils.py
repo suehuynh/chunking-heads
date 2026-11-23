@@ -15,6 +15,7 @@ import pickle
 import einops
 
 from shared_utils.wrapper import get_accessor_config, get_model_specs, ModelAccessor
+from shared_utils.prompt_utils import model_inputs
 
 def free_unused_cuda_memory():
     """Free unused cuda memory."""
@@ -183,7 +184,7 @@ def get_head_activation_ranks_probs_mean(
         accessor_config = get_accessor_config(model)
         accessor = ModelAccessor(model, accessor_config)
         with accessor.trace(remote=remote) as tracer:
-            with tracer.invoke(tokens): 
+            with tracer.invoke(model_inputs(model, tokens, trim=True)): 
                 for layer in range(n_layers):
                     # Get attention output
                     attn_output = accessor.layers[layer].attention.output.unwrap().input[:, -1]
@@ -265,7 +266,7 @@ def get_head_activation_mean(
         accessor_config = get_accessor_config(model)
         accessor = ModelAccessor(model, accessor_config)
         with accessor.trace(remote=remote) as tracer:
-            with tracer.invoke(tokens): 
+            with tracer.invoke(model_inputs(model, tokens, trim=True)): 
                 for layer in range(n_layers):
                     # Get attention output
                     attn_output = accessor.layers[layer].attention.output.unwrap().input[:, -1]
@@ -1032,7 +1033,7 @@ def cache_act_nnsight(
             batch_answer_tokens = all_answer_tokens[batch_start:batch_end]
 
         with model.trace(remote=remote) as tracer:
-            with tracer.invoke(batch_tokens) as invoker:
+            with tracer.invoke(model_inputs(model, batch_tokens, trim=True)) as invoker:
                 for layer in range(n_layers):
                     if cache_component_type == "heads":
                         downstream_attn_output = accessor.layers[layer].attention.output.unwrap().input[:, -1]

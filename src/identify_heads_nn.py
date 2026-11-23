@@ -36,6 +36,8 @@ if __name__ == "__main__":
     parser.add_argument("--remote", type=bool, default=False, help="whether to use NDIF to run model remotely")
     parser.add_argument("--task_relation_dict_type", type=str, default="human",
         help="type of the task relation dict: human, llms, combined")
+    parser.add_argument("--templates", type=int, nargs="+", default=None,
+        help="only these templates (EP: shot counts, default 5 10 20 30; IP: default 0 1 2 3 4)")
 
     args = parser.parse_args()
     model_name = args.model_name
@@ -138,6 +140,8 @@ if __name__ == "__main__":
         prompt_template_idx_list = [5, 10, 20, 30]
     else:
         raise ValueError(f"prompt_type {prompt_type} not supported")
+    if args.templates:
+        prompt_template_idx_list = args.templates
 
     # Run and save the results
     for prompt_template_index in prompt_template_idx_list: 
